@@ -1,18 +1,24 @@
 ﻿using FibaPlus_Bank.Models;
+using MassTransit;
+using MassTransit.Transports;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR.Protocol;
 using Microsoft.EntityFrameworkCore;
 using System.Net.Http;
 using System.Text.Json;
+using MassTransit; 
+using FibaPlus_Bank.Events;
+
 namespace FibaPlus_Bank.Controllers
 {
     public class AdminController : Controller
     {
         private readonly FibraPlusBankDbContext _context;
-
-        public AdminController(FibraPlusBankDbContext context)
+        private readonly IPublishEndpoint _publishEndpoint;
+        public AdminController(FibraPlusBankDbContext context, IPublishEndpoint publishEndpoint)
         {
             _context = context;
+            _publishEndpoint = publishEndpoint;
         }
 
         private bool IsAdmin()
@@ -539,27 +545,35 @@ namespace FibaPlus_Bank.Controllers
             return View(logs);
         }
 
-        private void LogToSystem(string actionType, string description, string level)
+        private async void LogToSystem(string actionType, string description, string level)
         {
-            int adminId = 1;
-            string adminName = "Süper Admin";
-            string ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1";
 
-            var log = new SystemLog
+            try
             {
-                UserId = adminId,
-                UserName = adminName,
-                ActionType = actionType,
-                Description = description,
-                IpAddress = ip,
-                LogLevel = level, 
-                CreatedAt = DateTime.Now
-            };
+              
+                int adminId = 1;
+                string adminName = "Süper Admin";
 
-            _context.SystemLogs.Add(log);
-            _context.SaveChanges();
+                string ip = HttpContext?.Connection?.RemoteIpAddress?.ToString() ?? "127.0.0.1";
+
+                await _publishEndpoint.Publish(new SystemLogEvent
+                {
+                    UserId = adminId,
+                    UserName = adminName,
+                    ActionType = actionType,
+                    Description = description,
+                    IpAddress = ip,
+                    LogLevel = level,
+                    CreatedAt = DateTime.Now
+                });
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("RabbitMQ Hatası: " + ex.Message);
+            }
         }
-
+     
 
         public IActionResult Settings()
         {

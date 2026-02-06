@@ -1,0 +1,116 @@
+﻿@model List<FibaPlus_Bank.Models.SystemLog>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="row mb-4 align-items-center">
+    <div class="col-md-6">
+        <h3 class="fw-bold text-dark m-0 d-flex align-items-center gap-2">
+            <i class="fa-solid fa-shield-halved text-info"></i> Güvenlik & Loglar
+        </h3>
+        <p class="text-muted small mt-1">Sistem üzerindeki tüm hareketlerin denetim kaydı.</p>
+    </div>
+    <div class="col-md-6 text-md-end">
+        <span class="badge bg-success bg-opacity-10 text-success border border-success px-3 py-2 rounded-pill">
+            <i class="fa-solid fa-server me-2"></i>Sistem Durumu: GÜVENLİ
+        </span>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm rounded-4 p-3 d-flex flex-row align-items-center gap-3">
+            <div class="bg-primary bg-opacity-10 p-3 rounded-circle text-primary">
+                <i class="fa-solid fa-right-to-bracket fs-4"></i>
+            </div>
+            <div>
+                <h6 class="text-muted small fw-bold mb-0">BUGÜNKÜ GİRİŞLER</h6>
+                <h4 class="fw-bold m-0">@Model.Count(x => x.ActionType == "Login" && x.CreatedAt > DateTime.Today)</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm rounded-4 p-3 d-flex flex-row align-items-center gap-3">
+            <div class="bg-warning bg-opacity-10 p-3 rounded-circle text-warning">
+                <i class="fa-solid fa-triangle-exclamation fs-4"></i>
+            </div>
+            <div>
+                <h6 class="text-muted small fw-bold mb-0">HATALI DENEMELER</h6>
+                <h4 class="fw-bold m-0">@Model.Count(x => x.ActionType == "LoginFail")</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm rounded-4 p-3 d-flex flex-row align-items-center gap-3">
+            <div class="bg-info bg-opacity-10 p-3 rounded-circle text-info">
+                <i class="fa-solid fa-user-secret fs-4"></i>
+            </div>
+            <div>
+                <h6 class="text-muted small fw-bold mb-0">ADMİN İŞLEMLERİ</h6>
+                <h4 class="fw-bold m-0">@Model.Count(x => x.ActionType == "Approve" || x.ActionType == "Delete" || x.ActionType == "Create")</h4>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+    <div class="card-header bg-white py-3 border-0">
+        <h6 class="fw-bold m-0 text-secondary"><i class="fa-solid fa-list-ul me-2"></i>Son Hareketler</h6>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="bg-light">
+                <tr>
+                    <th class="ps-4 py-3 text-secondary small fw-bold text-uppercase">Seviye</th>
+                    <th class="py-3 text-secondary small fw-bold text-uppercase">Kullanıcı</th>
+                    <th class="py-3 text-secondary small fw-bold text-uppercase">İşlem</th>
+                    <th class="py-3 text-secondary small fw-bold text-uppercase">Açıklama</th>
+                    <th class="py-3 text-secondary small fw-bold text-uppercase">IP Adresi</th>
+                    <th class="text-end pe-4 py-3 text-secondary small fw-bold text-uppercase">Tarih</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var log in Model)
+                {
+                    string badgeColor = "bg-secondary";
+                    string icon = "fa-circle-info";
+
+                    if (log.LogLevel == "Info") { badgeColor = "bg-primary"; icon = "fa-circle-info"; }
+                    else if (log.LogLevel == "Warning") { badgeColor = "bg-warning text-dark"; icon = "fa-triangle-exclamation"; }
+                    else if (log.LogLevel == "Danger") { badgeColor = "bg-danger"; icon = "fa-shield-virus"; }
+
+                    <tr>
+                        <td class="ps-4">
+                            <span class="badge @badgeColor bg-opacity-10 border border-opacity-10 rounded-pill px-3 py-2 text-@badgeColor.Replace("bg-", "")">
+                                <i class="fa-solid @icon me-1"></i> @log.LogLevel
+                            </span>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="bg-light rounded-circle d-flex justify-content-center align-items-center" style="width: 30px; height: 30px;">
+                                    <i class="fa-solid fa-user text-muted small"></i>
+                                </div>
+                                <span class="fw-bold text-dark small">@(log.UserName ?? "Sistem")</span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="fw-bold small text-uppercase text-secondary">@log.ActionType</span>
+                        </td>
+                        <td>
+                            <span class="text-dark small">@log.Description</span>
+                        </td>
+                        <td>
+                            <span class="font-monospace small text-muted bg-light px-2 py-1 rounded">@log.IpAddress</span>
+                        </td>
+                        <td class="text-end pe-4">
+                            <div class="d-flex flex-column">
+                                <span class="fw-bold small text-dark">@log.CreatedAt.ToString("dd.MM.yyyy")</span>
+                                <span class="text-muted" style="font-size: 10px;">@log.CreatedAt.ToString("HH:mm:ss")</span>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

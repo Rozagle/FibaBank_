@@ -1,0 +1,149 @@
+﻿@model List<FibaPlus_Bank.Models.Transaction>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="row align-items-center mb-4 g-3">
+    <div class="col-md-5">
+        <h3 class="fw-bold text-dark m-0 d-flex align-items-center gap-2">
+            <i class="fa-solid fa-money-bill-transfer text-success"></i> İşlem İzleme
+        </h3>
+        <p class="text-muted small mb-0 mt-1">Sistemdeki tüm finansal hareketlerin kaydı.</p>
+    </div>
+
+    <div class="col-md-7 d-flex justify-content-md-end gap-2">
+        <form action="/Admin/Transactions" method="get" class="d-flex gap-2 w-100 justify-content-end">
+
+            <select name="type" class="form-select border-0 shadow-sm text-secondary fw-bold" style="width: 160px;" onchange="this.form.submit()">
+                <option value="All">Tüm İşlemler</option>
+                <option value="Transfer" selected="@(ViewBag.SelectedType == "Transfer")">Transferler</option>
+                <option value="Payment" selected="@(ViewBag.SelectedType == "Payment")">Ödemeler</option>
+                <option value="Deposit" selected="@(ViewBag.SelectedType == "Deposit")">Yatırılan</option>
+                <option value="Withdraw" selected="@(ViewBag.SelectedType == "Withdraw")">Çekilen</option>
+            </select>
+
+            <div class="input-group shadow-sm rounded-pill bg-white overflow-hidden border-0" style="max-width: 350px;">
+                <span class="input-group-text bg-white border-0 ps-3 text-muted"><i class="fa-solid fa-search"></i></span>
+                <input type="text" name="search" class="form-control border-0 bg-white shadow-none" placeholder="Kod, İsim veya IBAN..." value="@ViewBag.SearchQuery">
+                <button class="btn btn-success px-4 fw-bold" type="submit">Ara</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden">
+    <div class="table-responsive">
+        <table class="table align-middle mb-0 table-hover">
+            <thead class="bg-light border-bottom">
+                <tr>
+                    <th class="ps-4 py-3 fw-bold text-secondary text-uppercase small">Ref. Kodu</th>
+                    <th class="py-3 fw-bold text-secondary text-uppercase small">Gönderen</th>
+                    <th class="py-3 fw-bold text-secondary text-uppercase small">Alıcı / Açıklama</th>
+                    <th class="py-3 fw-bold text-secondary text-uppercase small">İşlem Türü</th>
+                    <th class="py-3 fw-bold text-secondary text-uppercase small">Tutar</th>
+                    <th class="py-3 fw-bold text-secondary text-uppercase small">Tarih</th>
+                    <th class="text-end pe-4 py-3 fw-bold text-secondary text-uppercase small">Durum</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    string iconClass = "fa-exchange-alt";
+                    string badgeClass = "bg-primary";
+                    string textClass = "text-primary";
+                    string typeName = item.TransactionType;
+
+                    if (item.TransactionType == "Payment")
+                    {
+                        iconClass = "fa-file-invoice-dollar";
+                        badgeClass = "bg-danger";
+                        textClass = "text-danger";
+                        typeName = "Fatura/Ödeme";
+                    }
+                    else if (item.TransactionType == "Deposit")
+                    {
+                        iconClass = "fa-arrow-down";
+                        badgeClass = "bg-success";
+                        textClass = "text-success";
+                        typeName = "Para Yatırma";
+                    }
+                    else if (item.TransactionType == "Withdraw")
+                    {
+                        iconClass = "fa-arrow-up";
+                        badgeClass = "bg-warning";
+                        textClass = "text-warning";
+                        typeName = "Para Çekme";
+                    }
+
+                    <tr>
+                        <td class="ps-4">
+                            <span class="badge bg-light text-dark border font-monospace">
+                                #@(item.ReferenceCode ?? item.TransactionId.ToString())
+                            </span>
+                        </td>
+
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="bg-light rounded-circle d-flex align-items-center justify-content-center text-muted border" style="width: 35px; height: 35px;">
+                                    <i class="fa-regular fa-user"></i>
+                                </div>
+                                <div class="ms-2">
+                                    <div class="fw-bold text-dark small">@(item.Account?.User?.FullName ?? "Bilinmiyor")</div>
+                                    <div class="text-muted" style="font-size: 10px;">
+                                        @(item.SenderIBAN ?? item.Account?.AccountNumber)
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+
+                        <td>
+                            <div class="fw-bold text-dark small">@(item.ReceiverName ?? "Kendisi")</div>
+                            <div class="text-muted small fst-italic" style="font-size: 11px;">
+                                <i class="fa-solid fa-quote-left text-light-gray me-1"></i>@item.Description
+                            </div>
+                        </td>
+
+                        <td>
+                            <span class="badge @badgeClass bg-opacity-10 @textClass border border-opacity-10 px-2 py-1 rounded-3">
+                                <i class="fa-solid @iconClass me-1"></i> @typeName
+                            </span>
+                        </td>
+
+                        <td>
+                            <div class="fw-bold text-dark">
+                                @item.Amount.GetValueOrDefault().ToString("N2") ₺
+                            </div>
+                        </td>
+
+                        <td>
+                            <div class="d-flex flex-column">
+                                <span class="fw-bold small text-dark">@item.TransactionDate?.ToString("dd.MM.yyyy")</span>
+                                <span class="text-muted" style="font-size: 10px;">@item.TransactionDate?.ToString("HH:mm")</span>
+                            </div>
+                        </td>
+
+                        <td class="text-end pe-4">
+                            @if (item.TransactionStatus == "Success")
+                            {
+                                <i class="fa-solid fa-circle-check text-success fs-5" title="Başarılı"></i>
+                            }
+                            else
+                            {
+                                <i class="fa-solid fa-circle-xmark text-danger fs-5" title="Başarısız"></i>
+                            }
+                        </td>
+                    </tr>
+                }
+                @if (Model.Count == 0)
+                {
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-muted">
+                            <i class="fa-solid fa-magnifying-glass mb-2 fs-3 d-block opacity-25"></i>
+                            Aradığınız kriterlere uygun işlem bulunamadı.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

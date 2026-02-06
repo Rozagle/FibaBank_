@@ -1,0 +1,118 @@
+﻿@{
+    Layout = "~/Views/Shared/_CustomerLayout.cshtml";
+    var products = ViewBag.Products as List<FibaPlus_Bank.Models.AccountProduct>;
+    var sourceAccounts = ViewBag.SourceAccounts as List<FibaPlus_Bank.Models.Account>;
+}
+
+<link href="~/css/account-create.css" rel="stylesheet" asp-append-version="true" />
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm rounded-4">
+            <div class="card-body p-5">
+                <h3 class="fw-bold text-dark mb-4">Yeni Hesap Açılışı</h3>
+
+                <form action="/Accounts/Create" method="post" id="createForm">
+                    @Html.AntiForgeryToken()
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-muted small">HESAP TÜRÜNÜ SEÇİN</label>
+                        <select class="form-select form-select-lg bg-light border-0" name="productId" id="productSelect" required onchange="updateUI()">
+                            <option value="" disabled selected>Seçiniz...</option>
+                            @if (products != null)
+                            {
+                                foreach (var item in products)
+                                {
+                                    <option value="@item.ProductId" data-currency="@item.CurrencyCode">@item.ProductName (@item.CurrencyCode)</option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-muted small">HESAP TİPİ</label>
+                        <div class="d-flex gap-3">
+                            <div class="form-check custom-option w-50">
+                                <input class="form-check-input" type="radio" name="selectedAccountType" id="typeVadesiz" value="Vadesiz" checked onchange="updateUI()">
+                                <label class="form-check-label w-100 p-3 border rounded-3 text-center cursor-pointer shadow-sm" for="typeVadesiz">
+                                    <i class="fa-solid fa-wallet fs-4 d-block mb-2 text-primary"></i>
+                                    <span class="fw-bold d-block">Vadesiz Hesap</span>
+                                </label>
+                            </div>
+                            <div class="form-check custom-option w-50">
+                                <input class="form-check-input" type="radio" name="selectedAccountType" id="typeVadeli" value="Vadeli" onchange="updateUI()">
+                                <label class="form-check-label w-100 p-3 border rounded-3 text-center cursor-pointer shadow-sm" id="labelVadeli" for="typeVadeli">
+                                    <i class="fa-solid fa-piggy-bank fs-4 d-block mb-2 text-warning"></i>
+                                    <span class="fw-bold d-block">Vadeli Hesap</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div id="currencyWarning" class="alert alert-warning border-0 mt-3" style="display:none;">
+                            <i class="fa-solid fa-triangle-exclamation me-2"></i> Vadeli hesap sadece <b>TL</b> ürünlerinde geçerlidir.
+                        </div>
+                    </div>
+
+                    <div id="vadeliGridArea" style="display:none;">
+                        <div class="p-4 bg-light rounded-4 mb-4 border">
+                            <h6 class="fw-bold text-dark mb-3"><i class="fa-solid fa-arrow-right-arrow-left me-2"></i>Kaynak Hesap Seçimi</h6>
+
+                            <div class="row g-3 mb-3">
+                                @if (sourceAccounts != null && sourceAccounts.Any())
+                                {
+                                    foreach (var acc in sourceAccounts)
+                                    {
+                                        <div class="col-12">
+                                            <input type="radio" class="btn-check" name="sourceAccountId" id="acc_@acc.AccountId" value="@acc.AccountId" autocomplete="off">
+                                            <label class="card account-select-card shadow-sm cursor-pointer w-100" for="acc_@acc.AccountId">
+                                                <div class="card-body d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        <h6 class="fw-bold mb-0 text-dark">@acc.AccountName</h6>
+                                                        <small class="text-muted">@acc.Iban</small>
+                                                    </div>
+                                                    <div class="text-end">
+                                                        <div class="small fw-bold text-muted">BAKİYE</div>
+                                                        <div class="fs-5 fw-bold text-primary">@acc.Balance?.ToString("N2") ₺</div>
+                                                    </div>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    }
+                                }
+                                else
+                                {
+                                    <div class="col-12"><div class="alert alert-danger border-0">Bakiyeli Vadesiz TL hesabınız yok.</div></div>
+                                }
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-muted">VADE SÜRESİ SEÇİN</label>
+                                    <select name="termDays" class="form-select border-0 shadow-sm" style="padding: 12px;">
+                                        <option value="32">32 Gün</option>
+                                        <option value="45">45 Gün</option>
+                                        <option value="92">92 Gün (3 Ay)</option>
+                                        <option value="181">181 Gün (6 Ay)</option>
+                                        <option value="365">365 Gün (1 Yıl)</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 d-flex align-items-end">
+                                    <div class="alert alert-info border-0 w-100 mb-0 py-2 small">
+                                        <i class="fa-solid fa-calculator me-1"></i> Faiz oranı aktarılan bakiyeye göre otomatik belirlenir.
+                                    </div>
+                                </div>
+                            </div>
+
+
+
+                        </div>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-dark btn-lg rounded-pill fw-bold shadow-lg">Hesabı Oluştur</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<script src="~/js/account-create.js" asp-append-version="true"></script>

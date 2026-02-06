@@ -1,0 +1,105 @@
+﻿@model List<FibaPlus_Bank.Models.Card>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+<link href="~/css/admin-cardapprovals.css" rel="stylesheet" asp-append-version="true" />
+
+<div class="mb-4">
+    <h3 class="fw-bold text-dark m-0 d-flex align-items-center gap-2">
+        <i class="fa-solid fa-list-check text-warning"></i> Kart Onay Merkezi
+    </h3>
+    <p class="text-muted small mt-1">Onay bekleyen kredi kartı başvurularını inceleyin.</p>
+</div>
+
+<div class="row g-4">
+    @foreach (var card in Model)
+    {
+        bool isVisa = card.CardType == "Visa";
+
+        <div class="col-md-6 col-xl-4">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100 hover-shadow transition-all">
+                <div class="card-body p-0 d-flex flex-column">
+
+                    <div class="p-4 text-white position-relative"
+                         style="background: @(isVisa ? "linear-gradient(135deg, #4f46e5, #818cf8)" : "linear-gradient(135deg, #2563eb, #06b6d4)"); min-height: 200px;">
+
+                        <div class="position-absolute top-0 end-0 p-3 opacity-25">
+                            <i class="fa-solid fa-wifi fa-2x"></i>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-start mb-4">
+                            <div style="width: 45px; height: 35px; background: linear-gradient(135deg, #fcd34d, #d97706); border-radius: 6px; opacity: 0.9;"></div>
+                            <div class="fs-4 fw-bold fst-italic opacity-75">FibraBank</div>
+                        </div>
+
+                        <div class="fs-4 fw-bold font-monospace mb-3" style="letter-spacing: 2px; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                            @card.CardNumber.Substring(0, 4) **** **** @card.CardNumber.Substring(12)
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-end mt-auto">
+                            <div>
+                                <div class="small text-white-50 text-uppercase" style="font-size: 10px;">Kart Sahibi</div>
+                                <div class="fw-bold text-uppercase">@card.Account.User.FullName</div>
+                            </div>
+                            <div class="fs-2">
+                                @if (isVisa)
+                                {
+                                    <i class="fa-brands fa-cc-visa"></i>
+                                }
+                                else
+                                {
+
+                                    <i class="fa-brands fa-cc-mastercard"></i>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-4 bg-white flex-grow-1 d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <div class="text-muted small text-uppercase fw-bold">Talep Edilen Limit</div>
+                                <div class="fs-5 fw-bold text-dark">@(((decimal)card.CardLimit).ToString("N0")) ₺</div>
+                            </div>
+                            <div class="text-end">
+                                <div class="text-muted small text-uppercase fw-bold">SKT</div>
+                                <div class="fs-6 fw-bold text-dark font-monospace">@card.ExpiryDate</div>
+                            </div>
+                        </div>
+
+                        <hr class="border-light my-3">
+
+                        <div class="d-flex gap-2 mt-auto">
+                            <form action="/Admin/RejectCard" method="post" class="w-50">
+                                <input type="hidden" name="cardId" value="@card.CardId" />
+                                <button type="submit" class="btn btn-light text-danger fw-bold w-100 py-2 border hover-danger">
+                                    <i class="fa-solid fa-xmark me-2"></i> Reddet
+                                </button>
+                            </form>
+
+                            <form action="/Admin/ApproveCard" method="post" class="w-50">
+                                <input type="hidden" name="cardId" value="@card.CardId" />
+                                <button type="submit" class="btn btn-success fw-bold w-100 py-2 shadow-sm">
+                                    <i class="fa-solid fa-check me-2"></i> Onayla
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (Model.Count == 0)
+    {
+        <div class="col-12 text-center py-5">
+            <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                <i class="fa-regular fa-folder-open text-muted fs-1"></i>
+            </div>
+            <h5 class="text-muted fw-bold">Bekleyen başvuru bulunmuyor.</h5>
+            <p class="text-muted small">Tüm kart başvuruları incelendi.</p>
+        </div>
+    }
+</div>
+

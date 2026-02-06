@@ -1,0 +1,43 @@
+﻿
+.market-card {
+    border: 1px solid #f1f5f9;
+    border-radius: 16px;
+    background: white;
+    transition: all 0.2s;
+    cursor: pointer;
+    margin-bottom: 12px;
+}
+
+    .market-card:hover {
+        transform: translateX(5px);
+        border-color: #4361ee;
+        box-shadow: 0 4px 15px rgba(67, 97, 238, 0.1);
+    }
+
+.trade-panel {
+    background: white;
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.04);
+    position: sticky;
+    top: 20px;
+    border: 1px solid #e5e7eb;
+}
+
+.nav-pills .nav-link {
+    border - radius: 12px;
+    font-weight: 600;
+    padding: 10px 20px;
+    color: #64748b;
+    background: #f8fafc;
+    margin-right: 5px;
+}
+
+    .nav-pills .nav-link.active {
+        background - color: #4361ee;
+        color: white;
+    }
+
+    .nav-pills .nav-link#pills-sell-tab.active {
+        background - color: #ef4444;
+    }

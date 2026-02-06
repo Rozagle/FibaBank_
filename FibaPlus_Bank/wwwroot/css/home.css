@@ -1,0 +1,263 @@
+﻿
+.credit-card {
+    width: 100%;
+    border-radius: 20px;
+    padding: 20px;
+    color: white;
+    position: relative;
+    overflow: hidden;
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    border: 1px solid rgba(255,255,255,0.15);
+}
+
+.credit-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E");
+    opacity: 0.6;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.bg-visa {
+    background: linear-gradient(135deg, #5655f0 0%, #302ddb 100%);
+}
+
+.bg-master {
+    background: linear-gradient(135deg, #ff9966 0%, #ff5e62 100%);
+}
+
+.bg-troy {
+    background: linear-gradient(135deg, #1c1c1c 0%, #383838 100%);
+    border: 1px solid #d4af37;
+}
+
+    .bg-troy .card-number, .bg-troy .card-holder, .bg-troy .card-expiry, .bg-troy small, .bg-troy i.contactless {
+        color: #d4af37 !important;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.9);
+    }
+
+.troy-text-gold {
+    font-weight: 900;
+    font-style: italic;
+    font-size: 1rem;
+    letter-spacing: -1px;
+    line-height: 1;
+    display: inline-block;
+    margin-right: 10px;
+    background: linear-gradient(135deg, #bf953f 0%, #fcf6ba 25%, #b38728 50%, #fbf5b7 75%, #aa771c 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5));
+}
+
+.chip {
+    width: 42px;
+    height: 32px;
+    border-radius: 6px;
+    position: relative;
+    z-index: 2;
+    box-shadow: inset 0 1px 3px rgba(255,255,255,0.4), 0 1px 2px rgba(0,0,0,0.2);
+    overflow: hidden;
+}
+
+.chip-silver {
+    background: linear-gradient(135deg, #e2e2e2 0%, #ffffff 50%, #d1d1d1 100%);
+    border: 1px solid #999;
+}
+
+.chip-gold {
+    background: linear-gradient(135deg, #bf953f 0%, #fcf6ba 40%, #b38728 60%, #fbf5b7 100%);
+    border: 1px solid #8a6e3e;
+}
+
+.chip::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: inherit;
+    filter: brightness(0.7);
+}
+
+.chip::before {
+    content: "";
+    position: absolute;
+    left: 35%;
+    top: 0;
+    height: 100%;
+    width: 1px;
+    background: inherit;
+    filter: brightness(0.7);
+    box-shadow: 12px 0 0 rgba(0,0,0,0.1);
+}
+
+.card-number {
+    font-family: 'Courier New', monospace;
+    font-size: 1.25rem;
+    letter-spacing: 2px;
+    font-weight: bold;
+    text-shadow: 0 2px 3px rgba(0,0,0,0.3);
+    z-index: 2;
+    margin-top: 10px;
+    white-space: nowrap;
+}
+
+.card-holder, .card-expiry {
+    font-family: 'Courier New', monospace;
+    text-transform: uppercase;
+    font-weight: 600;
+    z-index: 2;
+    letter-spacing: 1px;
+    font-size: 0.8rem;
+}
+
+.card-logo {
+    opacity: 0.95;
+    z-index: 2;
+    display: flex;
+    align-items: end;
+}
+
+    .card-logo i {
+        font-size: 2.5rem;
+    }
+
+.contactless {
+    font-size: 20px;
+    transform: rotate(90deg);
+    opacity: 0.8;
+    z-index: 2;
+}
+
+.asset-pill {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 50px;
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+}
+
+    .asset-pill span {
+        color: #1e293b;
+        font-weight: 700;
+    }
+
+.dashboard-card {
+    background: white;
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+    border: 1px solid #f1f5f9;
+}
+
+.h-full-card {
+    height: 100%;
+}
+
+.wise-selector {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background-color: #fff;
+    cursor: pointer;
+    transition: 0.2s;
+    min-width: 110px;
+    border: 1px solid transparent;
+}
+
+    .wise-selector:hover {
+        background-color: #f1f5f9;
+    }
+
+.curr-flag {
+    width: 24px;
+    height: 18px;
+    border-radius: 3px;
+    object-fit: cover;
+    margin-right: 8px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.curr-code {
+    font-weight: 700;
+    color: #1e293b;
+    font-size: 15px;
+}
+
+.currency-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    margin-bottom: 4px;
+    border-radius: 12px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: transparent;
+    text-align: left;
+    width: 100%;
+}
+
+    .currency-item:hover {
+        background-color: #f1f5f9;
+        transform: translateX(5px);
+    }
+
+.currency-flag {
+    width: 32px;
+    height: 24px;
+    object-fit: cover;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.currency-code {
+    font-weight: 800;
+    color: #1e293b;
+    font-size: 1rem;
+    min-width: 45px;
+}
+
+.currency-name {
+    color: #64748b;
+    font-size: 0.9rem;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.currency-search-input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    margin-bottom: 10px;
+    outline: none;
+    transition: 0.2s;
+}
+
+    .currency-search-input:focus {
+        border-color: #6366f1;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+

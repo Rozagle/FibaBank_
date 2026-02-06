@@ -1,0 +1,210 @@
+﻿@model List<FibaPlus_Bank.Models.Transaction>
+@{
+    Layout = "~/Views/Shared/_CustomerLayout.cshtml";
+
+    var accounts = ViewBag.Accounts as List<FibaPlus_Bank.Models.Account>;
+    var paymentTypes = ViewBag.PaymentTypes as List<FibaPlus_Bank.Models.PaymentType>;
+    int? selectedAccountId = ViewBag.SelectedAccountId as int?;
+    var cards = ViewBag.Cards as List<FibaPlus_Bank.Models.Card> ?? new List<FibaPlus_Bank.Models.Card>();
+}
+
+<link href="~/css/transfer.css" rel="stylesheet" asp-append-version="true" />
+
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold m-0 text-dark">Para Transferi</h3>
+        <p class="text-muted m-0 small">Güvenli ve hızlı para transferi.</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-5">
+        <div class="custom-card compact-card shadow-sm border-0 h-100">
+            <div class="d-flex align-items-center mb-4">
+                <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                    <i class="fa-solid fa-bolt fs-5"></i>
+                </div>
+                <h5 class="fw-bold m-0 text-dark">Hızlı Gönder</h5>
+            </div>
+
+            <form method="post" action="/Transfer/SendMoney" id="transferForm">
+
+                <div class="mb-3">
+                    <label class="form-label">GÖNDEREN HESAP</label>
+                    <div class="input-wrapper">
+                        <select id="senderAccount" name="SenderAccountId" class="form-select modern-input">
+                            <option value="">Seçiniz...</option>
+                            @if (accounts != null)
+                            {
+                                foreach (var item in accounts)
+                                {
+                                    bool isSelected = (selectedAccountId != null && selectedAccountId == item.AccountId);
+                                    string displayAmount = item.Balance?.ToString("N2");
+
+                                    if (item.AccountType == "Kredi")
+                                    {
+                                        var linkedCard = cards.FirstOrDefault(c => c.AccountId == item.AccountId);
+                                        if (linkedCard != null)
+                                        {
+                                            decimal available = (linkedCard.CardLimit ?? 0) - (linkedCard.Debt ?? 0);
+                                            displayAmount = available.ToString("N2");
+                                        }
+                                    }
+                                    if (isSelected)
+                                    {
+                                        <option value="@item.AccountId" data-type="@item.AccountType" data-currency="@item.CurrencyCode" data-iban="@item.Iban" selected>
+                                            @item.AccountName | @item.AccountNumber - @displayAmount @item.CurrencyCode
+                                        </option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@item.AccountId" data-type="@item.AccountType" data-currency="@item.CurrencyCode" data-iban="@item.Iban">
+                                            @item.AccountName | @item.AccountNumber - @displayAmount @item.CurrencyCode
+                                        </option>
+                                    }
+                                }
+                            }
+                        </select>
+                        <i class="fa-solid fa-wallet input-icon"></i>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">ALICI IBAN</label>
+                    <div class="input-wrapper">
+                        <input type="text" name="ReceiverIban" id="ibanInput" class="form-control modern-input" placeholder="TR..." maxlength="32" required>
+                        <i class="fa-solid fa-iban input-icon"></i>
+                        <div id="bankLogo" class="position-absolute top-50 end-0 translate-middle-y me-3" style="display:none;"></div>
+                    </div>
+                    <small id="ibanError" class="text-danger fw-bold mt-1 ps-1" style="display:none; font-size:10px;"><i class="fa-solid fa-circle-exclamation me-1"></i> Hatalı IBAN</small>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">ALICI AD SOYAD</label>
+                    <div class="input-wrapper">
+                        <input type="text" name="ReceiverName" id="receiverName" class="form-control modern-input" placeholder="Ad Soyad" required>
+                        <i class="fa-regular fa-user input-icon"></i>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                        <label class="form-label">ÖDEME TÜRÜ</label>
+                        <div class="input-wrapper">
+                            <select name="PaymentTypeId" class="form-select modern-input" required>
+                                @if (paymentTypes != null)
+                                {
+                                    foreach (var type in paymentTypes)
+                                    {
+                                        <option value="@type.Id">@type.Name</option>
+                                    }
+                                }
+                                else
+                                {
+                                    <option value="1">Diğer</option>
+                                }
+                            </select>
+                            <i class="fa-solid fa-list-ul input-icon"></i>
+                    </div>         
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">TUTAR</label>
+                    <div class="input-wrapper">
+                        <input type="number" name="Amount" class="form-control modern-input fw-bold" placeholder="0.00" step="0.01" required>
+                        <span class="input-icon fw-bold" style="font-style: normal; font-size: 1.1rem; color: #1e293b;" id="currencySymbol">₺</span>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center bg-light px-3 py-2 rounded-3 mb-3 border border-light">
+                    <span class="small text-muted fw-bold" style="font-size: 11px;"><i class="fa-solid fa-circle-info me-1"></i> İşlem Masrafı:</span>
+                    <span class="small fw-bold text-dark" id="feeWarning">13.86 ₺</span>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label">AÇIKLAMA</label>
+                    <div class="input-wrapper">
+                        <input type="text" name="Description" class="form-control modern-input" placeholder="Örn: Kira">
+                        <i class="fa-regular fa-comment-dots input-icon"></i>
+                    </div>
+                </div>
+                @if (TempData["Error"] != null)
+                {
+                    <div class="alert alert-danger d-flex align-items-center mb-3 rounded-3" role="alert">
+                        <i class="fa-solid fa-circle-exclamation me-2 fs-5"></i>
+                        <div class="small fw-bold">
+                            @TempData["Error"]
+                        </div>
+                    </div>
+                }
+
+                @if (TempData["Success"] != null)
+                {
+                    <div class="alert alert-success d-flex align-items-center mb-3 rounded-3" role="alert">
+                        <i class="fa-solid fa-circle-check me-2 fs-5"></i>
+                        <div class="small fw-bold">
+                            @TempData["Success"]
+                        </div>
+                    </div>
+                }
+                <button type="button" onclick="confirmTransfer()" class="btn btn-primary w-100 py-3 rounded-4 fw-bold shadow-lg position-relative overflow-hidden" style="background-color: #4361ee; border:none; transition: all 0.3s;">
+                    <span class="position-relative z-1"><i class="fa-solid fa-paper-plane me-2"></i> Gönder</span>
+                </button>
+
+            </form>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="custom-card compact-card h-100 border-0 shadow-sm">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold m-0 text-dark">Son İşlemler</h5>
+                <a href="/Transactions/Index" class="text-decoration-none small fw-bold text-primary">Tümü</a>
+            </div>
+
+            @if (Model == null || Model.Count == 0)
+            {
+                <div class="text-center text-muted py-5">
+                    <i class="fa-solid fa-receipt fa-2x text-light mb-3"></i>
+                    <p class="m-0 fw-bold small">İşlem yok</p>
+                </div>
+            }
+            else
+            {
+                <div class="trans-list">
+                    @foreach (var item in Model)
+                    {
+                        bool isIncoming = (item.TransactionType == "İade" || item.TransactionType == "Gelen Transfer" || item.TransactionStatus == "Refunded");
+
+                        string flowClass = isIncoming ? "bg-success bg-opacity-10 text-success" : "bg-danger bg-opacity-10 text-danger";
+                        string textClass = isIncoming ? "text-success" : "text-danger";
+                        string prefix = isIncoming ? "+" : "-";
+                        string currency = item.Account != null ? item.Account.CurrencyCode : "TRY";
+                        string date = item.TransactionDate.HasValue ? item.TransactionDate.Value.ToString("dd.MM.yyyy") : "-";
+
+                        string title = item.ReceiverName;
+                        if (item.TransactionType == "İade") { title = "İADE"; }
+
+                        <div class="d-flex align-items-center py-2 border-bottom border-light hover-bg px-2 rounded-2">
+                            <div class="d-flex align-items-center justify-content-center rounded-3 me-3 @flowClass" style="width: 40px; height: 40px; font-size: 1rem;">
+                                <i class="@(item.CategoryIcon ?? "fa-solid fa-money-bill")"></i>
+                            </div>
+                            <div class="flex-grow-1 ps-1">
+                                <div class="fw-bold text-dark small mb-0">@title</div>
+                                <div class="text-muted" style="font-size: 10px;">@item.TransactionType • @date</div>
+                            </div>
+                            <div class="text-end">
+                                <div class="fw-bold small @textClass mb-0">
+                                    @prefix @item.Amount.GetValueOrDefault().ToString("N2") @currency
+                                </div>
+                                <button class="btn btn-link p-0 text-decoration-none small text-muted" style="font-size: 10px;" onclick="downloadReceipt('@item.ReferenceCode', '@date', '@item.SenderIBAN', '@item.ReceiverName', '@item.Amount')">
+                                    Dekont
+                                </button>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<script src="~/js/transfer.js" asp-append-version="true"></script>

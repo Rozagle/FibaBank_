@@ -1,0 +1,396 @@
+﻿@model List<FibaPlus_Bank.Models.User>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<link href="~/css/admin-users.css" rel="stylesheet" asp-append-version="true" />
+
+<div class="row align-items-center mb-4 g-3">
+    <div class="col-md-5">
+        <h3 class="fw-bold text-dark m-0 d-flex align-items-center gap-2">
+            <i class="fa-solid fa-users-gear text-primary"></i> Kullanıcı Yönetimi
+        </h3>
+        <p class="text-muted small mb-0 mt-1">Toplam @Model.Count müşteri listeleniyor.</p>
+    </div>
+
+    <div class="col-md-7 d-flex justify-content-md-end gap-2">
+        <button class="btn btn-success rounded-pill px-4 fw-bold shadow-sm d-flex align-items-center gap-2"
+                data-bs-toggle="modal" data-bs-target="#modalCreateUser">
+            <i class="fa-solid fa-user-plus"></i> Yeni Müşteri
+        </button>
+
+        <form action="/Admin/Users" method="get" class="d-flex gap-2" style="max-width: 300px;">
+            <div class="input-group shadow-sm rounded-pill bg-white overflow-hidden border border-light">
+                <span class="input-group-text bg-white border-0 ps-3 text-muted"><i class="fa-solid fa-search"></i></span>
+                <input type="text" name="search" class="form-control border-0 bg-white shadow-none py-2" placeholder="Ara..." value="@ViewBag.SearchQuery">
+            </div>
+        </form>
+    </div>
+</div>
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger border-0 shadow-sm rounded-3 mb-3 d-flex align-items-center">
+        <i class="fa-solid fa-circle-exclamation me-2"></i> @TempData["Error"]
+    </div>
+}
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success border-0 shadow-sm rounded-3 mb-3 d-flex align-items-center">
+        <i class="fa-solid fa-circle-check me-2"></i> @TempData["Success"]
+    </div>
+}
+
+<div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden">
+    <div class="table-responsive">
+        <table class="table align-middle mb-0" style="border-collapse: separate; border-spacing: 0;">
+            <thead class="bg-light border-bottom">
+                <tr>
+                    <th class="ps-4 py-3 fw-bold text-uppercase table-header">Müşteri Bilgisi</th>
+                    <th class="py-3 fw-bold text-uppercase table-header">Segment & TC</th>
+                    <th class="py-3 fw-bold text-uppercase table-header">Varlık Durumu</th>
+                    <th class="py-3 fw-bold text-uppercase table-header">İletişim</th>
+                    <th class="text-end pe-4 py-3 fw-bold text-uppercase table-header">Yönet</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var user in Model)
+                {
+                    bool isVip = user.Segment == "VIP";
+                    int cardCount = user.Accounts != null ? user.Accounts.Sum(a => a.Cards != null ? a.Cards.Count : 0) : 0;
+                    int accountCount = user.Accounts != null ? user.Accounts.Count : 0;
+
+                    <tr class="hover-row border-bottom border-light">
+                        <td class="ps-4 py-3">
+                            <div class="d-flex align-items-center">
+                                <div class="position-relative flex-shrink-0" style="width: 48px; height: 48px;">
+                                    <img src="https://ui-avatars.com/api/?name=@user.FullName&background=@(isVip ? "F59E0B" : "e2e8f0")&color=@(isVip ? "fff" : "64748b")&size=128"
+                                         class="rounded-circle shadow-sm border border-2 border-white d-block"
+                                         style="width: 100%; height: 100%; object-fit: cover;"
+                                         alt="@user.FullName">
+                                    @if (isVip)
+                                    {
+                                        <span class="position-absolute bg-warning border border-2 border-white rounded-circle d-flex align-items-center justify-content-center shadow-sm"
+                                              style="top: -2px; right: -4px; width: 22px; height: 22px; z-index: 10;"
+                                              title="VIP Müşteri">
+                                            <i class="fa-solid fa-crown text-white" style="font-size: 10px; margin-bottom: 1px;"></i>
+                                        </span>
+                                    }
+                                </div>
+                                <div class="ms-3">
+                                    <div class="fw-bold text-dark fs-6" style="line-height: 1.2;">@user.FullName</div>
+                                    <div class="text-muted small mt-1" style="font-size: 0.75rem;">ID: #@user.UserId</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="d-flex flex-column align-items-start gap-1">
+                                @if (isVip)
+                                {
+                                    <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 rounded-pill px-3">
+                                        <i class="fa-solid fa-crown me-1"></i> VIP MÜŞTERİ
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-10 rounded-pill px-3">
+                                        STANDART
+                                    </span>
+                                }
+                                <div class="text-muted small font-monospace mt-1">
+                                    <i class="fa-regular fa-id-card me-1 opacity-50"></i>@(user.IdentityNumber ?? "TC Girilmemiş")
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="d-flex gap-2">
+                                <div class="asset-badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-10" title="Toplam Hesap Sayısı">
+                                    <i class="fa-solid fa-wallet me-2"></i>
+                                    <span>@accountCount Hesap</span>
+                                </div>
+                                <div class="asset-badge bg-purple bg-opacity-10 text-purple border border-purple border-opacity-10" style="color: #8b5cf6; background-color: #f5f3ff; border-color: #ddd6fe;" title="Toplam Kart Sayısı">
+                                    <i class="fa-solid fa-credit-card me-2"></i>
+                                    <span>@cardCount Kart</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center text-muted">
+                                <i class="fa-regular fa-envelope me-2 opacity-50"></i>
+                                <span class="small fw-medium">@user.Email</span>
+                            </div>
+                        </td>
+                        <td class="text-end pe-4">
+                            <div class="dropdown">
+                                <button class="btn btn-light btn-sm rounded-3 shadow-sm border px-3 py-2" type="button" data-bs-toggle="dropdown">
+                                    <i class="fa-solid fa-ellipsis text-dark"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg rounded-4 p-2" style="min-width: 200px;">
+                                    <li><h6 class="dropdown-header small text-uppercase fw-bold text-muted my-1">Yönetim</h6></li>
+                                    <li>
+                                        <a class="dropdown-item rounded-3 mb-1 py-2 d-flex align-items-center gap-2 fw-medium" href="#"
+                                           onclick="openEditModal(@user.UserId, '@user.FullName', '@user.Email', '@user.IdentityNumber', '@user.Segment')">
+                                            <i class="fa-solid fa-user-pen text-info fa-fw"></i> Düzenle
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider my-2"></li>
+                                    <li><h6 class="dropdown-header small text-uppercase fw-bold text-muted my-1">Ürünler</h6></li>
+                                    <li>
+                                        <a class="dropdown-item rounded-3 mb-1 py-2 d-flex align-items-center gap-2 fw-medium" href="#" onclick="openAccountModal(@user.UserId, '@user.FullName')">
+                                            <i class="fa-solid fa-wallet text-primary fa-fw"></i> Hesap Aç
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item rounded-3 mb-1 py-2 d-flex align-items-center gap-2 fw-medium" href="#" onclick="openCardModal(@user.UserId, '@user.FullName')">
+                                            <i class="fa-solid fa-credit-card text-purple fa-fw" style="color: #8b5cf6;"></i> Kart Tanımla
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider my-2"></li>
+                                    <li>
+                                        <form action="/Admin/DeleteUser" method="post" onsubmit="return confirm('Bu kullanıcıyı ve tüm verilerini silmek istediğinize emin misiniz?');">
+                                            <input type="hidden" name="id" value="@user.UserId" />
+                                            <button class="dropdown-item rounded-3 py-2 text-danger d-flex align-items-center gap-2 fw-bold bg-danger bg-opacity-10" type="submit">
+                                                <i class="fa-solid fa-trash fa-fw"></i> Sil
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                @if (Model.Count == 0)
+                {
+                    <tr><td colspan="5" class="text-center text-muted py-5 fw-bold">Kriterlere uygun müşteri bulunamadı.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade" id="modalEditUser" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow-lg">
+            <div class="modal-header border-0 pb-0 pt-4 px-4">
+                <h5 class="fw-bold d-flex align-items-center gap-2">
+                    <span class="bg-info bg-opacity-10 text-info p-2 rounded-circle"><i class="fa-solid fa-user-pen"></i></span>
+                    Müşteri Bilgilerini Güncelle
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form action="/Admin/UpdateUser" method="post">
+                    <input type="hidden" id="editUserId" name="userId" />
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-muted text-uppercase">Ad Soyad</label>
+                        <input type="text" id="editFullName" name="fullName" class="form-control shadow-sm border-light bg-light fw-medium text-dark" required />
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted text-uppercase">TC Kimlik No</label>
+                            <input type="text" id="editIdentity" name="identityNumber" class="form-control shadow-sm border-light fw-medium" 
+                                   maxlength="11"
+                                   minlength="11"
+                                   pattern="\d{11}"/>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Müşteri Türü</label>
+                            <select name="segment" id="editSegment" class="form-select shadow-sm border-light fw-medium">
+                                <option value="Standard">Standart Müşteri</option>
+                                <option value="VIP">VIP Müşteri</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-bold small text-muted text-uppercase">E-Posta</label>
+                        <input type="email" id="editEmail" name="email" class="form-control shadow-sm border-light" required />
+                    </div>
+                    <button type="submit" class="btn btn-dark w-100 py-3 rounded-3 fw-bold shadow-sm">
+                        Değişiklikleri Kaydet
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalAddAccount" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow-lg">
+            <div class="modal-header border-0 pb-0 pt-4 px-4">
+                <h5 class="fw-bold d-flex align-items-center gap-2">
+                    <span class="bg-primary bg-opacity-10 text-primary p-2 rounded-circle"><i class="fa-solid fa-wallet"></i></span>
+                    Yeni Hesap Açılışı
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form action="/Admin/CreateAccount" method="post">
+                    <input type="hidden" id="accountUserId" name="userId" />
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-muted text-uppercase">Müşteri</label>
+                        <input type="text" id="accountUserName" class="form-control bg-light border-0 fw-bold text-dark" readonly />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-muted text-uppercase">Hesap Ürünü</label>
+                        <select name="productId" class="form-select shadow-sm border-light fw-bold text-dark">
+                            @if (ViewBag.ProductList != null)
+                            {
+                                var products = (List<FibaPlus_Bank.Models.AccountProduct>)ViewBag.ProductList;
+                                var groups = products.GroupBy(p => p.Category);
+                                foreach (var group in groups)
+                                {
+                                    <optgroup label="@group.Key">
+                                        @foreach (var item in group)
+                                        {
+                                            <option value="@item.ProductId">@item.ProductName (@item.CurrencyCode)</option>
+                                        }
+                                    </optgroup>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-muted text-uppercase">Hesap Türü</label>
+                        <div class="d-flex gap-2">
+                            <input type="radio" class="btn-check" name="accountType" id="vadesiz" value="Vadesiz" checked onchange="toggleVadeliOptions()">
+                            <label class="btn btn-outline-primary flex-grow-1 fw-bold py-2" for="vadesiz">Vadesiz (Cari)</label>
+
+                            <input type="radio" class="btn-check" name="accountType" id="vadeli" value="Vadeli" onchange="toggleVadeliOptions()">
+                            <label class="btn btn-outline-success flex-grow-1 fw-bold py-2" for="vadeli">Vadeli (Mevduat)</label>
+                        </div>
+                    </div>
+
+                    <div id="vadeliOptions" style="display:none;" class="p-3 bg-light rounded-3 mb-3 border">
+                        <label class="form-label fw-bold small text-muted text-uppercase">Vade Süresi (Gün)</label>
+                        <select name="termDays" class="form-select mb-3">
+                            <option value="32">32 Gün (Kırık Vade)</option>
+                            <option value="92">92 Gün (3 Ay)</option>
+                            <option value="181">181 Gün (6 Ay)</option>
+                            <option value="365">365 Gün (1 Yıl)</option>
+                        </select>
+
+                        <label class="form-label fw-bold small text-muted text-uppercase">Açılış Tutarı</label>
+                        <div class="input-group mb-2">
+                            <input type="number" id="initialAmount" name="initialAmount" class="form-control" placeholder="0.00" min="0" step="0.01">
+                            <span class="input-group-text">TL</span>
+                        </div>
+
+                        <label class="form-label fw-bold small text-muted text-uppercase mt-2">Para Kaynağı (Vadesiz Hesap)</label>
+                        <select id="sourceAccountSelect" name="sourceAccountId" class="form-select mb-2">
+                            <option value="">Seçiniz...</option>
+                        </select>
+
+                        <div class="form-check mt-2">
+                            <input class="form-check-input" type="checkbox" name="closeSourceAccount" id="closeSource">
+                            <label class="form-check-label small text-danger fw-bold" for="closeSource">
+                                Parayı aktardıktan sonra kaynak hesabı kapat/sil
+                            </label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 py-3 rounded-3 fw-bold shadow-lg">
+                        Hesabı Oluştur
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalAddCard" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow-lg">
+            <div class="modal-header border-0 pb-0 pt-4 px-4">
+                <h5 class="fw-bold d-flex align-items-center gap-2">
+                    <span class="bg-purple bg-opacity-10 text-purple p-2 rounded-circle" style="color:#8b5cf6; background:#f5f3ff;"><i class="fa-solid fa-credit-card"></i></span>
+                    Yeni Kart Tanımla
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form action="/Admin/CreateCard" method="post">
+                    <input type="hidden" id="cardUserId" name="userId" />
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-muted text-uppercase">Müşteri</label>
+                        <input type="text" id="cardUserName" class="form-control bg-light border-0 fw-bold text-dark" readonly />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-muted text-uppercase">Kart Tipi</label>
+                        <div class="d-flex gap-2">
+                            <input type="radio" class="btn-check" name="cardType" id="visa" value="Visa" checked>
+                            <label class="btn btn-outline-primary flex-grow-1 fw-bold py-2" for="visa">
+                                <i class="fa-brands fa-cc-visa fa-lg me-1"></i> Visa
+                            </label>
+                            <input type="radio" class="btn-check" name="cardType" id="master" value="MasterCard">
+                            <label class="btn btn-outline-danger flex-grow-1 fw-bold py-2" for="master">
+                                <i class="fa-brands fa-cc-mastercard fa-lg me-1"></i> MasterCard
+                            </label>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-bold small text-muted text-uppercase">Kart Limiti</label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text bg-white border-light text-muted">₺</span>
+                            <input type="number" name="limit" class="form-control border-light fw-bold text-dark" placeholder="Örn: 50000" required min="0" step="1000" value="50000">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-dark w-100 py-3 rounded-3 fw-bold shadow-lg" style="background-color: #6366f1; border:none;">
+                        Kartı Oluştur
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalCreateUser" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow-lg">
+            <div class="modal-header border-0 pb-0 pt-4 px-4">
+                <h5 class="fw-bold d-flex align-items-center gap-2">
+                    <span class="bg-success bg-opacity-10 text-success p-2 rounded-circle"><i class="fa-solid fa-user-plus"></i></span>
+                    Yeni Müşteri Kaydı
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form action="/Admin/CreateUser" method="post">
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-muted text-uppercase">Ad Soyad</label>
+                        <input type="text" name="fullName" class="form-control form-control-lg bg-light border-0 fw-bold text-dark" required placeholder="İsim Giriniz" />
+                    </div>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted text-uppercase">TC Kimlik No</label>
+                            <input type="text" name="identityNumber" class="form-control bg-light border-0" 
+                                   maxlength="11"
+                                   minlength="11"
+                                   pattern="\d{11}"
+                                   placeholder="T.C. Kimlik No (11 hane)" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Başlangıç Şifresi</label>
+                            <input type="text" name="password" class="form-control bg-light border-0" value="1234" required />
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold small text-muted text-uppercase">E-Posta Adresi</label>
+                        <input type="email" name="email" class="form-control bg-light border-0" required placeholder="ornek@mail.com" />
+                    </div>
+
+                    <button type="submit" class="btn btn-success w-100 py-3 rounded-3 fw-bold shadow-lg">
+                        <i class="fa-solid fa-save me-2"></i> Kaydı Tamamla
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="~/js/admin-users.js" asp-append-version="true"></script>

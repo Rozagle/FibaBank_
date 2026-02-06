@@ -1,0 +1,235 @@
+﻿@model List<FibaPlus_Bank.Models.Transaction>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    
+    decimal totalDeposit = ViewBag.TotalDeposit != null ? (decimal)ViewBag.TotalDeposit : 0;
+    decimal depositChange = ViewBag.DepositChange != null ? (decimal)ViewBag.DepositChange : 0;
+    decimal dailyVolume = ViewBag.DailyVolume != null ? (decimal)ViewBag.DailyVolume : 0;
+    decimal volChange = ViewBag.VolChange != null ? (decimal)ViewBag.VolChange : 0;
+}
+
+<link href="~/css/admin.css" rel="stylesheet" asp-append-version="true" />
+<div class="d-flex justify-content-between align-items-end mb-5">
+    <div>
+        <h2 class="fw-bold text-dark m-0">Hoşgeldin, Süper Admin 👋</h2>
+        <p class="text-muted small mt-2 m-0">FibraBank sistem özeti ve analizleri.</p>
+    </div>
+    <div class="text-muted fw-bold small">@DateTime.Now.ToString("dd MMMM yyyy, dddd")</div>
+</div>
+
+<div class="row g-4 mb-5">
+
+    <div class="col-md-3">
+        <div class="card-clean">
+            <div class="d-flex justify-content-between align-items-start">
+                <div class="card-title-soft">TOPLAM MEVDUAT</div>
+                <div class="icon-box-soft bg-soft-blue"><i class="fa-solid fa-wallet"></i></div>
+            </div>
+            <div class="card-value">@totalDeposit.ToString("N0") ₺</div>
+            <div class="@(ViewBag.DepositChange >= 0 ? "trend-up" : "trend-down")">
+                <i class="fa-solid @(ViewBag.DepositChange >= 0 ? "fa-arrow-trend-up" : "fa-arrow-trend-down")"></i>
+                %@(((decimal)ViewBag.DepositChange).ToString("N1"))
+                <span class="text-muted ms-1 fw-normal" style="font-size: 11px;">geçen güne göre</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card-clean">
+            <div class="d-flex justify-content-between align-items-start">
+                <div class="card-title-soft">GÜNLÜK HACİM</div>
+                <div class="icon-box-soft bg-soft-yellow"><i class="fa-solid fa-chart-simple"></i></div>
+            </div>
+            <div class="card-value">@(((decimal)ViewBag.DailyVolume).ToString("N0")) ₺</div>
+
+            <div class="@(ViewBag.VolChange >= 0 ? "trend-up" : "trend-down")">
+                <i class="fa-solid @(ViewBag.VolChange >= 0 ? "fa-arrow-trend-up" : "fa-arrow-trend-down")"></i>
+                %@(((decimal)ViewBag.VolChange).ToString("N1"))
+                <span class="text-muted ms-1 fw-normal" style="font-size: 11px;">geçen güne göre</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card-clean">
+            <div class="d-flex justify-content-between align-items-start">
+                <div class="card-title-soft">BEKLEYEN ONAY</div>
+                <div class="icon-box-soft bg-soft-red"><i class="fa-solid fa-bell"></i></div>
+            </div>
+            <div class="card-value">@ViewBag.PendingCards</div>
+
+            <div class="trend-neutral">
+                <span class="text-danger fw-bold">Aksiyon Gerekiyor</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card-clean">
+            <div class="d-flex justify-content-between align-items-start">
+                <div class="card-title-soft">TOPLAM MÜŞTERİ</div>
+                <div class="icon-box-soft bg-soft-green"><i class="fa-solid fa-users"></i></div>
+            </div>
+            <div class="card-value">@ViewBag.TotalUsers</div>
+
+            <div class="trend-up">
+                <i class="fa-solid fa-plus"></i> Yeni Kayıt
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-5">
+    <div class="col-12">
+        <div class="chart-card">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5 class="fw-bold m-0 text-dark">Varlık Analizi</h5>
+                <select class="form-select form-select-sm border-0 bg-light fw-bold text-secondary" style="width: 100px;" onchange="updateChart(this.value)">
+                    <option value="weekly">Haftalık</option>
+                    <option value="monthly">Aylık</option>
+                    <option value="yearly">Yıllık</option>
+                </select>
+            </div>
+            <div style="height: 350px;">
+                <canvas id="mainWaveChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-8">
+        <div class="chart-card h-100">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h5 class="fw-bold m-0 text-dark">Kritik İşlem Akışı 💎</h5>
+                    <small class="text-muted" style="font-size: 11px;">VIP müşteriler ve 25M+ işlemler</small>
+                </div>
+                <a href="/Admin/Transactions" class="btn btn-sm btn-light fw-bold text-dark border">Tüm Kayıtlar</a>
+            </div>
+
+            <div class="table-responsive ">
+                <table class="table transaction-table rounded-4">
+                    <thead>
+                        <tr>
+                            <th class="ps-3">Müşteri Segmenti</th>
+                            <th>Tarih</th>
+                            <th>Alıcı & Açıklama</th>
+                            <th class="text-end pe-3">Tutar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            bool isVip = item.Account?.User?.Segment == "VIP";
+                            bool isWhale = item.Amount > 25000000;
+
+                            <tr>
+                                <td class="ps-3">
+                                    <div class="d-flex align-items-center">
+                                        <div class="position-relative">
+                                            <img src="https://ui-avatars.com/api/?name=@(item.Account?.User?.FullName ?? "U")&background=@(isVip ? "F59E0B" : "1e293b")&color=fff"
+                                                 class="avatar-circle shadow-sm"
+                                                 style="@(isVip ? "border: 2px solid #F59E0B;" : "")">
+
+                                            @if (isVip)
+                                            {
+                                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark border border-white" style="font-size: 8px;">
+                                                    <i class="fa-solid fa-crown"></i>
+                                                </span>
+                                            }
+                                        </div>
+
+                                        <div class="ms-2">
+                                            <div class="fw-bold text-dark text-nowrap">@(item.Account?.User?.FullName ?? "Bilinmiyor")</div>
+
+                                            @if (isVip)
+                                            {
+                                                <span class="badge bg-warning bg-opacity-25 text-warning fw-bold" style="font-size: 10px; border: 1px solid rgba(245, 158, 11, 0.3);">VIP MÜŞTERİ</span>
+                                            }
+                                            else if (isWhale)
+                                            {
+                                                <span class="badge bg-danger bg-opacity-10 text-danger fw-bold" style="font-size: 10px;">YÜKSEK HACİM</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-light text-muted border" style="font-size: 10px;">Standard</span>
+                                            }
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-muted fw-normal small">@item.TransactionDate?.ToString("dd MMM HH:mm")</td>
+                                <td>
+                                    <div class="d-flex flex-column">
+                                        <span class="fw-bold text-dark small">@item.ReceiverName</span>
+                                        <span class="text-muted" style="font-size: 11px;">@item.Description</span>
+                                    </div>
+                                </td>
+                                <td class="text-end pe-3">
+                                    <div class="fw-bold fs-6 @(isWhale ? "text-danger" : "text-dark")">
+                                        @item.Amount?.ToString("N0") ₺
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                        @if (Model.Count == 0)
+                        {
+                            <tr><td colspan="4" class="text-center text-muted py-5">Kritik işlem bulunamadı.</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="chart-card bg-white rounded-4 h-100 d-flex flex-column p-4">
+
+            <div class="mb-4">
+                <h5 class="fw-bold m-0 text-start text-dark">İşlem Dağılımı</h5>
+            </div>
+
+            <div class="flex-grow-1 d-flex flex-column align-items-center justify-content-center">
+
+                <div style="width: 240px; height: 240px; position: relative;">
+                    <canvas id="pieChart"></canvas>
+
+                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; pointer-events: none;">
+                        <div class="text-muted small fw-bold text-uppercase" style="font-size: 11px; letter-spacing: 0.5px;">BUGÜN</div>
+                        <div class="fw-bold text-dark" style="font-size: 20px;">
+                            @(((decimal)ViewBag.DailyVolume).ToString("N0"))
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 d-flex gap-4 justify-content-center w-100">
+                    <div class="d-flex align-items-center gap-2">
+                        <span style="width: 10px; height: 10px; background-color: #6366f1; border-radius: 50%;"></span>
+                        <span class="small fw-bold text-secondary">Gelen</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span style="width: 10px; height: 10px; background-color: #10b981; border-radius: 50%;"></span>
+                        <span class="small fw-bold text-secondary">Giden</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span style="width: 10px; height: 10px; background-color: #f59e0b; border-radius: 50%;"></span>
+                        <span class="small fw-bold text-secondary">Yatırım</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="~/js/admin.js" asp-append-version="true"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var rawData = @Html.Raw(Json.Serialize(ViewBag.PieData ?? new List<decimal> { 0, 0, 0 }));
+
+        if (typeof initPieChart === "function") {
+            initPieChart(rawData);
+        }
+    });
+</script>

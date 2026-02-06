@@ -1,0 +1,186 @@
+﻿@model FibaPlus_Bank.Models.TradeViewModel
+@{
+    Layout = "~/Views/Shared/_CustomerLayout.cshtml";
+}
+
+<link href="~/css/investments-trade.css" rel="stylesheet" asp-append-version="true" />
+<div class="row g-4">
+
+    <div class="col-lg-7">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h4 class="fw-bold m-0">Piyasa Verileri</h4>
+                <p class="text-muted small m-0">İşlem yapmak istediğiniz varlığı seçin.</p>
+            </div>
+            <a href="/Investments/Index" class="btn btn-light btn-sm rounded-pill px-3 border fw-bold text-muted">
+                <i class="fa-solid fa-arrow-left me-2"></i>Portföye Dön
+            </a>
+        </div>
+
+        <ul class="nav nav-tabs border-0 mb-3" id="marketTabs" role="tablist">
+            <li class="nav-item"><button class="nav-link active fw-bold border-0 bg-transparent text-primary" data-bs-toggle="tab" data-bs-target="#tab-stock">Borsa İstanbul</button></li>
+            <li class="nav-item"><button class="nav-link fw-bold border-0 bg-transparent text-muted" data-bs-toggle="tab" data-bs-target="#tab-gold">Altın & Emtia</button></li>
+            <li class="nav-item"><button class="nav-link fw-bold border-0 bg-transparent text-muted" data-bs-toggle="tab" data-bs-target="#tab-currency">Döviz</button></li>
+        </ul>
+
+        <div class="tab-content">
+
+            <div class="tab-pane fade show active" id="tab-stock">
+                @foreach (var item in Model.StockList)
+                {
+                    <div class="market-card p-3 d-flex justify-content-between align-items-center"
+                         onclick="selectAsset('@item.code', '@item.name', @item.selling.ToString().Replace(',', '.'), 'STOCK', 'EQUITY')">
+
+                        <div class="d-flex align-items-center">
+                            <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center me-3" style="width:45px; height:45px;">
+                                <i class="fa-solid fa-arrow-trend-up"></i>
+                            </div>
+                            <div>
+                                <h6 class="m-0 fw-bold text-dark">@item.name</h6>
+                                <small class="text-muted fw-bold">@item.code</small>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <div class="fw-bold text-dark fs-5">@item.selling.ToString("N2") ₺</div>
+                            <span class="badge bg-light text-muted border">Değişim: @item.rate</span>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="tab-pane fade" id="tab-gold">
+                @foreach (var item in Model.GoldList)
+                {
+                    <div class="market-card p-3 d-flex justify-content-between align-items-center"
+                         onclick="selectAsset('@item.code', '@item.name', @item.selling.ToString().Replace(',', '.'), 'GOLD', 'COMMODITY')">
+
+                        <div class="d-flex align-items-center">
+                            <div class="bg-warning bg-opacity-10 text-warning rounded-circle d-flex align-items-center justify-content-center me-3" style="width:45px; height:45px;">
+                                <i class="fa-solid fa-coins"></i>
+                            </div>
+                            <div>
+                                <h6 class="m-0 fw-bold text-dark">@item.name</h6>
+                                <small class="text-muted fw-bold">@item.code</small>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <div class="fw-bold text-dark fs-5">@item.selling.ToString("N2") ₺</div>
+                            <span class="badge bg-light text-muted border">Değişim: @item.rate</span>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="tab-pane fade" id="tab-currency">
+                @foreach (var item in Model.CurrencyList)
+                {
+                    <div class="market-card p-3 d-flex justify-content-between align-items-center"
+                         onclick="selectAsset('@item.code', '@item.name', @item.selling.ToString().Replace(',', '.'), 'CURRENCY', 'FOREX')">
+
+                        <div class="d-flex align-items-center">
+                            <div class="bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center me-3" style="width:45px; height:45px;">
+                                <i class="fa-solid fa-money-bill"></i>
+                            </div>
+                            <div>
+                                <h6 class="m-0 fw-bold text-dark">@item.name</h6>
+                                <small class="text-muted fw-bold">@item.code</small>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <div class="fw-bold text-dark fs-5">@item.selling.ToString("N2") ₺</div>
+                            <span class="badge bg-light text-muted border">Değişim: @item.rate</span>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="trade-panel">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5 class="fw-bold m-0"><i class="fa-solid fa-bolt text-warning me-2"></i>Hızlı İşlem</h5>
+
+                <span class="badge bg-light text-dark border px-3 py-2" id="balanceDisplay">
+                    <i class="fa-solid fa-wallet me-1 text-muted"></i> @Model.UserBalance.ToString("N2") ₺
+                </span>
+            </div>
+
+            <ul class="nav nav-pills nav-fill mb-4" id="pills-tab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="pills-buy-tab" data-bs-toggle="pill" data-bs-target="#pills-buy" type="button" onclick="setTransactionType('BUY')">AL (BUY)</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="pills-sell-tab" data-bs-toggle="pill" data-bs-target="#pills-sell" type="button" onclick="setTransactionType('SELL')">SAT (SELL)</button>
+                </li>
+            </ul>
+
+            <form action="/Investments/TradePost" method="post" id="tradeForm">
+
+                <input type="hidden" name="TransactionType" id="txType" value="BUY">
+                <input type="hidden" name="InvestmentType" id="invType" value="">
+                <input type="hidden" name="InstrumentType" id="instType" value="">
+                <input type="hidden" name="InstrumentName" id="instName" value="">
+
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-muted">İşlem Yapılacak Hesap</label>
+                    <select name="accountId" id="accountSelect" class="form-select fw-bold" onchange="updateBalance()">
+                        @if (Model.Accounts != null && Model.Accounts.Any())
+                        {
+                            @foreach (var acc in Model.Accounts)
+                            {
+                                <option value="@acc.AccountId" data-balance="@acc.Balance">
+                                    @acc.AccountName | @acc.AccountNumber
+                                </option>
+                            }
+                        }
+                        else
+                        {
+                            <option value="" disabled selected>Vadesiz TRY Hesabı Bulunamadı</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-muted">Varlık</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                        <input type="text" name="Symbol" id="symbolInput" class="form-control border-start-0 ps-0 fw-bold bg-light"
+                               placeholder=" Listeden Seçiniz..." readonly required style="cursor: not-allowed;">
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-6">
+                        <label class="form-label small fw-bold text-muted">Fiyat</label>
+                        <input type="text" name="UnitPrice" id="priceInput" class="form-control bg-light fw-bold" readonly required>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small fw-bold text-muted">Adet</label>
+                        <input type="number" name="Quantity" id="qtyInput" class="form-control fw-bold" placeholder="0" step="0.01" required oninput="calculateTotal()">
+                    </div>
+                </div>
+
+                <div class="bg-light p-3 rounded-3 mb-4 d-flex justify-content-between align-items-center border">
+                    <span class="text-muted small fw-bold">TOPLAM TUTAR</span>
+                    <span class="fs-4 fw-bold text-primary" id="totalPrice">0,00 ₺</span>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 py-3 rounded-3 fw-bold shadow-sm transition-all" id="actionBtn" disabled>
+                    <i class="fa-solid fa-check me-2"></i>Lütfen Varlık Seçin
+                </button>
+            </form>
+
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success mt-3 rounded-3 small">@TempData["Success"]</div>
+            }
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger mt-3 rounded-3 small">@TempData["Error"]</div>
+            }
+        </div>
+    </div>
+</div>
+
+<script src="~/js/investments-trade.js" asp-append-version="true"></script>

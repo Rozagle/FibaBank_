@@ -1,0 +1,62 @@
+﻿
+.input-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.input-icon {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8; 
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+    z-index: 10;
+    pointer-events: none; 
+}
+
+.modern-input {
+    width: 100%;
+    padding: 12px 15px 12px 50px !important;
+    border-radius: 12px !important;
+    border: 1px solid #e2e8f0 !important;
+    background-color: #f8fafc !important;
+    font-weight: 500;
+    color: #1e293b;
+    font-size: 0.95rem;
+    height: 48px; 
+    transition: all 0.3s ease;
+}
+
+    .modern-input:focus {
+        background-color: #ffffff !important;
+        border-color: #4361ee !important;
+        box-shadow: 0 0 0 4px rgba(67, 97, 238, 0.1) !important;
+    }
+
+        .modern-input:focus + .input-icon,
+        .input-wrapper:focus-within .input-icon {
+            color: #4361ee;
+        }
+
+select.modern-input {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+    background-position: right 1rem center;
+    background-size: 16px 12px;
+    background-repeat: no-repeat;
+    appearance: none;
+}
+
+.form-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #64748b;
+    margin-bottom: 6px;
+    letter-spacing: 0.3px;
+}
+
+.compact-card {
+    padding: 25px !important; 
+}
+

@@ -1,0 +1,144 @@
+﻿@model List<FibaPlus_Bank.Models.Investment>
+@{
+    Layout = "~/Views/Shared/_CustomerLayout.cshtml";
+    decimal totalPortfolio = ViewBag.TotalPortfolioValue != null ? (decimal)ViewBag.TotalPortfolioValue : 0;
+    decimal totalProfitLoss = ViewBag.TotalProfitLoss != null ? (decimal)ViewBag.TotalProfitLoss : 0;
+}
+
+<link href="~/css/investments.css" rel="stylesheet" asp-append-version="true" />
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold m-0 text-dark">Portföyüm</h4>
+        <p class="text-muted m-0 small">Yatırımlarınızı ve varlık dağılımınızı inceleyin.</p>
+    </div>
+    <a href="/Investments/Trade" class="btn btn-primary rounded-pill px-4 fw-bold">
+        <i class="fa-solid fa-plus me-2"></i> Yeni İşlem
+    </a>
+</div>
+
+<div class="row g-4">
+        <div class="col-lg-8">
+            <div class="custom-card h-100 shadow-sm border-0">
+                <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+                    <h5 class="fw-bold m-0">Varlık Listesi</h5>
+                    <div class="text-end">
+                        <span class="text-muted small fw-bold d-block">TOPLAM DEĞER</span>
+                        <span class="fs-4 fw-bold text-dark">@totalPortfolio.ToString("N2") ₺</span>
+
+                        <div class="small fw-bold @(totalProfitLoss >= 0 ? "text-success" : "text-danger")">
+                            @(totalProfitLoss >= 0 ? "+" : "")@totalProfitLoss.ToString("N2") ₺
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="text-secondary small text-uppercase bg-light">
+                            <tr>
+                                <th class="ps-3 py-3">Varlık</th>
+                                <th class="py-3">Güncel Fiyat</th>
+                                <th class="text-end py-3">Maliyet</th>
+                                <th class="text-end py-3">Adet</th>
+                                <th class="text-end py-3">Toplam</th>
+                                <th class="text-end pe-3 py-3">Kâr/Zarar</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                decimal avgCost = item.PurchasePrice; 
+                                decimal currentPrice = item.CurrentPrice; 
+
+                                decimal marketValue = item.Quantity * currentPrice;
+                                decimal costValue = item.Quantity * avgCost;
+
+                                decimal profitLoss = marketValue - costValue;
+                                decimal profitPercent = avgCost > 0 ? (profitLoss / costValue) * 100 : 0;
+
+                                string profitClass = profitLoss >= 0 ? "text-success" : "text-danger";
+                                string profitSign = profitLoss >= 0 ? "+" : "";
+
+                                string iconClass = "bg-default";
+                                string iconHtml = "<i class='fa-solid fa-box'></i>";
+
+                                if (item.InvestmentType == "STOCK") { iconClass = "bg-stock"; iconHtml = "<i class='fa-solid fa-arrow-trend-up'></i>"; }
+                                else if (item.InvestmentType == "GOLD") { iconClass = "bg-gold"; iconHtml = "<i class='fa-solid fa-coins'></i>"; }
+                                else if (item.InvestmentType == "CURRENCY") { iconClass = "bg-bes"; iconHtml = "<i class='fa-solid fa-money-bill'></i>"; }
+
+                                <tr>
+                                    <td class="ps-3">
+                                        <div class="d-flex align-items-center">
+                                            <div class="asset-icon @iconClass">@Html.Raw(iconHtml)</div>
+                                            <div>
+                                                <div class="fw-bold text-dark">@item.InstrumentCode</div>
+                                                <div class="small text-muted">@item.InstrumentName</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="fw-bold">@currentPrice.ToString("N2") ₺</td>
+                                    <td class="text-end text-muted small">@avgCost.ToString("N2") ₺</td>
+                                    <td class="text-end font-monospace">@item.Quantity.ToString("N0")</td>
+                                    <td class="text-end fw-bold">@marketValue.ToString("N2") ₺</td>
+                                    <td class="text-end pe-3">
+                                        <div class="@profitClass fw-bold small">@profitSign%@profitPercent.ToString("N2")</div>
+                                        <div class="@profitClass small">@profitSign@profitLoss.ToString("N2") ₺</div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    <div class="col-lg-4">
+        <div class="custom-card shadow-sm border-0 h-100">
+            <h5 class="fw-bold mb-4">Dağılım</h5>
+
+            <div style="height: 250px; position: relative; margin-bottom: 20px;">
+                <canvas id="portfolioChart"></canvas>
+            </div>
+
+            <div class="mt-2 px-1">
+                @if (ViewBag.DistributionList is List<FibaPlus_Bank.Controllers.InvestmentsController.PortfolioItemDTO> distList && distList.Any())
+                {
+                    <div class="d-flex justify-content-between small text-muted border-bottom pb-2 mb-3">
+                        <span>Varlık Türü</span>
+                        <span>Oran</span>
+                    </div>
+
+                    @foreach (var item in distList)
+                    {
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div class="d-flex align-items-center">
+                                <div class="rounded-circle me-3" style="width: 12px; height: 12px; background-color: @item.Color;"></div>
+                                <div>
+                                    <div class="small fw-bold text-dark">@item.Label</div>
+                                    <div class="text-muted" style="font-size: 11px;">@item.Value.ToString("N0") ₺</div>
+                                </div>
+                            </div>
+                            <div class="fw-bold small text-dark">%@item.Percentage.ToString("N1")</div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <p class="text-center text-muted small py-4">Grafik verisi yok.</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    window.chartData = {
+        labels: @Html.Raw(Json.Serialize(ViewBag.ChartLabels)),
+        values: @Html.Raw(Json.Serialize(ViewBag.ChartValues)),
+        colors: @Html.Raw(Json.Serialize(ViewBag.ChartColors))
+    };
+</script>
+
+<script src="~/js/investments.js" asp-append-version="true"></script>

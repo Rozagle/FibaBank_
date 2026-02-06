@@ -1,0 +1,127 @@
+﻿@using System.Globalization
+@model List<FibaPlus_Bank.Models.Account>
+@{
+    Layout = "~/Views/Shared/_CustomerLayout.cshtml";
+
+    var vadesizler = Model.Where(x => x.AccountType == "Vadesiz").ToList();
+    var vadeliler = Model.Where(x => x.AccountType == "Vadeli").ToList();
+}
+
+<link href="~/css/accounts.css" rel="stylesheet" asp-append-version="true" />
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold text-dark m-0">Hesaplarım</h4>
+        <p class="text-muted mb-0 small">Varlıklarınızı yönetin.</p>
+    </div>
+    <a href="/Accounts/Create" class="btn btn-dark btn-sm rounded-pill px-4 fw-bold shadow-sm d-flex align-items-center gap-2">
+        <i class="fa-solid fa-plus"></i> <span class="d-none d-md-inline">Yeni Hesap</span>
+    </a>
+</div>
+
+<div class="row g-3">
+    <div class="col-12">
+        <h6 class="fw-bold text-muted mb-2 small ps-1 text-uppercase">Vadesiz Hesaplar</h6>
+        <div class="row g-3">
+            @if (vadesizler.Any())
+            {
+                foreach (var item in vadesizler)
+                {
+                    @Html.Raw(RenderAccountCard(item))
+                }
+            }
+            else
+            {
+                <div class="col-12"><div class="alert alert-light border rounded-3 text-center text-muted py-3 small">Vadesiz hesap yok.</div></div>
+            }
+        </div>
+    </div>
+
+    <div class="col-12 mt-4">
+        <h6 class="fw-bold text-muted mb-2 small ps-1 text-uppercase">Vadeli Hesaplar</h6>
+        <div class="row g-3">
+            @if (vadeliler.Any())
+            {
+                foreach (var item in vadeliler)
+                {
+                    @Html.Raw(RenderAccountCard(item))
+                }
+            }
+            else
+            {
+                <div class="col-12"><div class="alert alert-light border rounded-3 text-center text-muted py-3 small">Vadeli hesap yok.</div></div>
+            }
+        </div>
+    </div>
+</div>
+
+@functions {
+    public string RenderAccountCard(FibaPlus_Bank.Models.Account item)
+    {
+        string iconClass = "bg-try-light";
+        string icon = "fa-turkish-lira-sign";
+        string symbol = "₺";
+
+        if (item.CurrencyCode == "USD")
+        {
+            iconClass = "bg-usd-light";
+            icon = "fa-dollar-sign";
+            symbol = "$";
+        }
+        else if (item.CurrencyCode == "EUR")
+        {
+            iconClass = "bg-eur-light";
+            icon = "fa-euro-sign";
+            symbol = "€";
+        }
+        else if (item.CurrencyCode == "XAU") 
+        {
+            iconClass = "bg-gold-light";
+            icon = "fa-coins"; 
+            symbol = "Gr";
+        }
+        else if (item.CurrencyCode == "XAG") 
+        {
+            iconClass = "bg-silver-light";
+            icon = "fa-coins"; 
+            symbol = "Gr";
+        }
+        else if (item.CurrencyCode == "XPT") 
+        {
+            iconClass = "bg-platinum-light";
+            icon = "fa-gem"; 
+            symbol = "Gr";
+        }
+
+        string badgeHtml = item.AccountType == "Vadeli"
+            ? $"<span class='badge bg-warning text-dark bg-opacity-25 border border-warning border-opacity-25' style='font-size:10px;'>%{item.InterestRate?.ToString("0.##", CultureInfo.InvariantCulture)} Faiz</span>"
+            : "";
+
+        return $@"
+        <div class='col-sm-6 col-lg-4 col-xl-3'>
+            <div class='acc-card'>
+                <div class='card-body p-3'>
+                    <div class='d-flex justify-content-between align-items-start'>
+                        <div class='acc-icon-box {iconClass}'>
+                            <i class='fa-solid {icon}'></i>
+                        </div>
+                        {badgeHtml}
+                    </div>
+
+                    <h6 class='fw-bold text-dark mb-1 text-truncate'>{item.AccountName}</h6>
+                    <div class='text-muted font-monospace mb-3' style='font-size: 10px;'>{item.Iban}</div>
+
+                    <div class='d-flex justify-content-between align-items-end border-top pt-2 mt-2'>
+                        <div>
+                            <div class='text-muted fw-bold text-uppercase' style='font-size: 9px;'>BAKİYE</div>
+                            <div class='fs-5 fw-bold text-dark'>{item.Balance?.ToString("N2")} {symbol}</div>
+                        </div>
+                        <a href='/Accounts/Details/{item.AccountId}' class='btn btn-sm btn-light rounded-pill px-3 fw-bold border' style='font-size:11px;'>
+                            Detay
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>";
+    }
+}

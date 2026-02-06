@@ -1,0 +1,146 @@
+﻿@model List<FibaPlus_Bank.Models.Card>
+@{
+    Layout = "~/Views/Shared/_CustomerLayout.cshtml";
+    var cardList = Model ?? new List<FibaPlus_Bank.Models.Card>();
+}
+
+<link href="~/css/cards.css" rel="stylesheet" asp-append-version="true" />
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex align-items-center gap-3">
+        <a href="/Home/Index" class="btn-back"><i class="fa-solid fa-arrow-left"></i> Geri</a>
+        <div>
+            <h4 class="fw-bold m-0 text-dark">Kart Yönetimi</h4>
+            <p class="text-muted m-0 small">Kredi ve banka kartlarınızı yönetin.</p>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+
+    <div class="col-lg-4 col-md-6 col-12">
+        <a href="/Cards/Create" class="add-card-box">
+            <div class="btn-circle-add"><i class="fa-solid fa-plus"></i></div>
+            <h6 class="fw-bold m-0">Yeni Kart Başvurusu</h6>
+            <small class="text-muted mt-1">Kredi Kartı veya Banka Kartı</small>
+        </a>
+    </div>
+
+    @foreach (var card in cardList)
+    {
+        string bgClass = "bg-visa";
+        string iconClass = "fa-cc-visa";
+        string chipClass = "chip-silver";
+
+        if (card.CardType == "Mastercard") { bgClass = "bg-master"; iconClass = "fa-cc-mastercard"; }
+        else if (card.CardType == "Troy") { bgClass = "bg-troy"; iconClass = "fa-credit-card"; chipClass = "chip-gold"; }
+
+        decimal limit = card.CardLimit ?? 0;
+        decimal debt = card.Debt ?? 0;
+        decimal available = limit - debt;
+
+        int usagePercent = (limit > 0) ? (int)((debt / limit) * 100) : 0;
+
+        string progressClass = "progress-bar-safe";
+        if (usagePercent > 50) progressClass = "progress-bar-warning";
+        if (usagePercent > 80) progressClass = "progress-bar-danger";
+
+        bool isFrozen = (card.Status == "Inactive");
+        string blurClass = isFrozen ? "frozen-effect" : "";
+        string btnText = isFrozen ? "Aktif Et" : "Dondur";
+        string btnClass = isFrozen ? "btn-success" : "btn-outline-danger";
+        string lockDisplay = isFrozen ? "block" : "none";
+
+        <div class="col-lg-4 col-md-6 col-12">
+            @if (card.Status == "Pending")
+            {
+                <div class="card border-0 shadow-sm h-100 p-4 text-center justify-content-center" style="border-radius: 24px; background: #fffbeb; border: 2px solid #fef3c7 !important; min-height: 250px;">
+                    <div class="mb-3"><i class="fa-solid fa-clock fa-3x text-warning opacity-50"></i></div>
+                    <h6 class="fw-bold text-dark">Başvurunuz İnceleniyor</h6>
+                    <span class="badge bg-warning text-dark mt-2 p-2">Talep: @limit.ToString("N0") ₺</span>
+                    <p class="small text-muted mt-3 mb-0" style="font-size: 0.75rem;">Onaylandığında kartınız burada görünecektir.</p>
+                </div>
+            }
+            else
+            {
+                <div style="position: relative;">
+
+                    <div id="lock-icon-@card.CardId" class="lock-overlay" style="display: @lockDisplay;">
+                        <i class="fa-solid fa-lock"></i>
+                    </div>
+
+                    <div id="card-visual-@card.CardId" class="@blurClass" style="position: relative; z-index: 10;">
+                        <div class="credit-card @bgClass">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="chip @chipClass"></div>
+                                <i class="fa-solid fa-wifi contactless" style="@(card.CardType == "Troy" ? "color: #d4af37; opacity:1;" : "")"></i>
+                            </div>
+                            <div class="card-number">
+                                @(card.CardNumber != null && card.CardNumber.Length == 16 ? System.Text.RegularExpressions.Regex.Replace(card.CardNumber, ".{4}", "$0 ") : card.CardNumber)
+                            </div>
+                            <div class="d-flex justify-content-between align-items-end">
+                                <div>
+                                    <div class="card-holder">@card.HolderName</div>
+                                    <small class="opacity-75" style="font-size: 9px;">@card.ExpiryDate</small>
+                                </div>
+                                <div class="card-logo">
+                                    @if (card.CardType == "Troy")
+                                    {
+                                        <span class="troy-text-gold">TROY</span>
+                                    }
+                                    else
+                                    {
+
+                                        <i class="fa-brands @iconClass"></i>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-controls">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small class="fw-bold text-dark" style="font-size: 0.75rem;">Limit Durumu</small>
+                        <small class="text-muted" style="font-size: 0.75rem;">%@usagePercent Dolu</small>
+                    </div>
+
+                    <div class="progress mb-2" style="height: 6px; border-radius: 10px; background-color: #e9ecef;">
+                        <div class="progress-bar @progressClass" role="progressbar" style="width: @usagePercent%" aria-valuenow="@usagePercent" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+                        <span class="small text-danger fw-bold" style="font-size: 0.75rem;">
+                            Borç: @debt.ToString("N2") ₺
+                        </span>
+                        <span class="small text-success fw-bold" style="font-size: 0.75rem;">
+                            Kullanılabilir: @available.ToString("N2") ₺
+                        </span>
+                    </div>
+
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <div class="d-flex align-items-center gap-1">
+                            <i class="fa-solid fa-globe text-primary small"></i>
+                            <span class="small fw-bold text-dark" style="font-size: 0.7rem;">Online İşlem</span>
+                        </div>
+                        <div class="form-check form-switch m-0">
+                            <input class="form-check-input" type="checkbox" @(card.IsInternetEnabledSafe ? "checked" : "") style="cursor: pointer; transform: scale(0.9);" @(isFrozen ? "disabled" : "")>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex">
+                        <button class="btn btn-outline-dark btn-sm flex-fill rounded-3 fw-bold py-1" style="font-size: 0.75rem;">Ekstre</button>
+
+                        <button id="btn-freeze-@card.CardId"
+                                onclick="toggleCardStatus(@card.CardId)"
+                                class="btn @btnClass btn-sm flex-fill rounded-3 fw-bold py-1"
+                                style="font-size: 0.75rem;">
+                            @btnText
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+<script src="~/js/cards.js" asp-append-version="true"></script>

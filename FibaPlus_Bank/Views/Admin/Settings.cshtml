@@ -1,0 +1,161 @@
+﻿@using System.Globalization
+@model List<FibaPlus_Bank.Models.InterestTier>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var settings = ViewBag.Settings as List<FibaPlus_Bank.Models.SystemSetting>;
+    string GetVal(string key) => settings?.FirstOrDefault(x => x.SettingKey == key)?.SettingValue ?? "";
+}
+
+<div class="row align-items-center mb-4">
+    <div class="col-md-6">
+        <h3 class="fw-bold text-dark m-0 d-flex align-items-center gap-2">
+            <i class="fa-solid fa-gears text-secondary"></i> Sistem Ayarları
+        </h3>
+        <p class="text-muted small mt-1">Bankanın global parametrelerini yönetin.</p>
+    </div>
+    @if (TempData["Message"] != null)
+    {
+        <div class="col-md-6"><div class="alert alert-success border-0 shadow-sm py-2 px-3 mb-0 d-flex align-items-center gap-2"><i class="fa-solid fa-circle-check"></i> @TempData["Message"]</div></div>
+    }
+</div>
+
+<form action="/Admin/UpdateSettings" method="post">
+    <ul class="nav nav-pills mb-4 gap-2" id="pills-tab" role="tablist">
+        <li class="nav-item"><button class="nav-link active fw-bold px-4 py-2 rounded-pill shadow-sm" id="pills-financial-tab" data-bs-toggle="pill" data-bs-target="#pills-financial" type="button"><i class="fa-solid fa-coins me-2"></i>Finansal</button></li>
+        <li class="nav-item"><button class="nav-link fw-bold px-4 py-2 rounded-pill shadow-sm" id="pills-system-tab" data-bs-toggle="pill" data-bs-target="#pills-system" type="button"><i class="fa-solid fa-server me-2"></i>Sistem & Bakım</button></li>
+    </ul>
+
+    <div class="tab-content" id="pills-tabContent">
+        <div class="tab-pane fade show active" id="pills-financial">
+            <div class="row g-4">
+
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+                        <div class="bg-primary" style="height: 6px;"></div>
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center mb-4">
+                                <div class="bg-primary bg-opacity-10 text-primary rounded-3 p-3 me-3"><i class="fa-solid fa-percent fs-4"></i></div>
+                                <div>
+                                    <h6 class="fw-bold text-dark mb-1">Faiz Oranları</h6>
+                                    <small class="text-muted" style="font-size: 12px; line-height: 1.2; display:block;">Vadeli hesap varsayılan faizi.</small>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-light text-primary w-100 fw-bold mt-3 border-0 shadow-sm" data-bs-toggle="modal" data-bs-target="#ratesModal">
+                                <i class="fa-solid fa-list-check me-2"></i> Detaylı Tabloyu Düzenle
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+                        <div class="bg-success" style="height: 6px;"></div>
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center mb-4">
+                                <div class="bg-success bg-opacity-10 text-success rounded-3 p-3 me-3"><i class="fa-solid fa-money-bill-transfer fs-4"></i></div>
+                                <div><h6 class="fw-bold text-dark mb-1">Transfer Limitleri</h6><small class="text-muted">Günlük EFT/Havale üst limiti.</small></div>
+                            </div>
+                            <label class="form-label small fw-bold text-uppercase text-secondary" style="font-size: 11px;">Günlük Limit</label>
+                            <div class="input-group">
+                                <input type="number" name="transferLimit" class="form-control form-control-lg bg-light border-0 fw-bold text-success" value="@GetVal("DailyTransferLimit")">
+                                <span class="input-group-text bg-light border-0 text-muted fw-bold">₺</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+                        <div class="bg-warning" style="height: 6px;"></div>
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center mb-4">
+                                <div class="bg-warning bg-opacity-10 text-warning rounded-3 p-3 me-3"><i class="fa-solid fa-chart-line fs-4"></i></div>
+                                <div><h6 class="fw-bold text-dark mb-1">Döviz Makası</h6><small class="text-muted">Alım-satımdaki kâr marjı.</small></div>
+                            </div>
+                            <label class="form-label small fw-bold text-uppercase text-secondary" style="font-size: 11px;">Spread Değeri</label>
+                            <div class="input-group">
+                                <input type="number" name="spread" class="form-control form-control-lg bg-light border-0 fw-bold text-warning" value="@GetVal("ExchangeSpread")" step="0.01">
+                                <span class="input-group-text bg-light border-0 text-muted fw-bold">Pips</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="pills-system">
+            <div class="card border-0 shadow-sm rounded-4 p-4">
+                <h5 class="fw-bold mb-4">Sistem Durumu Kontrolü</h5>
+                <div class="d-flex align-items-center justify-content-between py-3 border-bottom border-light">
+                    <div><h6 class="fw-bold m-0 text-danger"><i class="fa-solid fa-triangle-exclamation me-2"></i>Bakım Modu</h6><small class="text-muted">Aktif edilirse müşteriler sisteme giriş yapamaz.</small></div>
+                    <div class="form-check form-switch"><input class="form-check-input fs-4" type="checkbox" name="maintenance" value="true" @(GetVal("MaintenanceMode") == "true" ? "checked" : "")></div>
+                </div>
+                <div class="d-flex align-items-center justify-content-between py-3">
+                    <div><h6 class="fw-bold m-0 text-dark"><i class="fa-solid fa-user-plus me-2"></i>Yeni Üye Alımı</h6><small class="text-muted">Kapatılırsa "Kayıt Ol" sayfası devre dışı kalır.</small></div>
+                    <div class="form-check form-switch"><input class="form-check-input fs-4" type="checkbox" name="register" value="true" @(GetVal("AllowNewRegister") == "true" ? "checked" : "")></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="fixed-bottom p-4 d-flex justify-content-end pe-5" style="pointer-events: none;">
+        <button type="submit" class="btn btn-dark rounded-pill py-3 px-5 fw-bold shadow-lg d-flex align-items-center gap-2" style="pointer-events: auto; transform: translateY(-20px);">
+            <i class="fa-solid fa-floppy-disk"></i> Ayarları Kaydet
+        </button>
+    </div>
+</form>
+
+<div class="modal fade" id="ratesModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content rounded-4 border-0 shadow-lg">
+            <div class="modal-header border-0 pb-0 pt-4 px-4">
+                <div><h5 class="modal-title fw-bold">Vadeli Mevduat Faiz Tablosu</h5><p class="text-muted small mb-0">Tutar ve vade gününe göre detaylı oranlar.</p></div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4 pt-2">
+                @if (Model == null || !Model.Any())
+                {
+                    <div class="text-center py-5"><p class="text-muted mb-3">Tablo verisi bulunamadı.</p><a href="/Admin/SeedDefaultRates" class="btn btn-warning btn-sm fw-bold">Varsayılan Tabloyu Yükle</a></div>
+                }
+                else
+                {
+                    <ul class="nav nav-tabs nav-fill mb-3" id="rateTabs" role="tablist">
+                        <li class="nav-item"><button class="nav-link active fw-bold small text-dark" data-bs-toggle="tab" data-bs-target="#tab-15-31" type="button">15-31 Gün</button></li>
+                        <li class="nav-item"><button class="nav-link fw-bold small text-dark" data-bs-toggle="tab" data-bs-target="#tab-32-35" type="button">32-35 Gün</button></li>
+                        <li class="nav-item"><button class="nav-link fw-bold small text-dark" data-bs-toggle="tab" data-bs-target="#tab-36-45" type="button">36-45 Gün</button></li>
+                    </ul>
+                    <div class="tab-content">
+                        @foreach (var range in new[] { "15-31", "32-35", "36-45" })
+                        {
+                            var minD = int.Parse(range.Split('-')[0]);
+                            var list = Model.Where(x => x.MinDays == minD).OrderBy(x => x.MinAmount).ToList();
+                            var activeClass = range == "15-31" ? "show active" : "";
+                            <div class="tab-pane fade @activeClass" id="tab-@range">
+                                <div class="table-responsive bg-light rounded-3 border p-0">
+                                    <table class="table table-sm table-borderless table-striped align-middle mb-0">
+                                        <thead class="text-muted small text-uppercase bg-white border-bottom"><tr><th class="ps-3 py-2">Tutar Aralığı (TL)</th><th class="text-end pe-3 py-2">Faiz (%)</th></tr></thead>
+                                        <tbody>
+                                            @foreach (var item in list)
+                                            {
+                                                <tr>
+                                                    <td class="fw-bold text-dark small ps-3">@item.MinAmount.ToString("N0") - @item.MaxAmount.ToString("N0")</td>
+                                                    <td class="text-end pe-3">
+                                                        <input type="number" class="form-control form-control-sm d-inline-block fw-bold text-center border-warning rate-input"
+                                                               style="width: 80px;"
+                                                               value="@(item.InterestRate.ToString("0.##", CultureInfo.InvariantCulture))"
+                                                               step="0.01" data-id="@item.Id" onchange="updateRate(this)">
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+<script src="~/js/admin-settings.js" asp-append-version="true"></script>

@@ -1,0 +1,26 @@
+﻿
+.form-check-input[type="radio"] {
+    display: none;
+}
+
+.form-check-input:checked + label {
+    background-color: #eff6ff;
+    border-color: #0d6efd !important;
+    color: #0d6efd;
+}
+
+.form-check-input:disabled + label {
+    background-color: #f8f9fa;
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-check:checked + .account-select-card {
+    border-color: #0d6efd;
+    background-color: #f0f7ff;
+}
+
+.account-select-card {
+    border: 2px solid transparent;
+    transition: all 0.2s;
+}

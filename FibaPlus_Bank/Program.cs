@@ -25,10 +25,12 @@ builder.Services.AddHttpClient<MarketDataService>();
 builder.Services.AddMassTransit(x =>
 {
     x.AddConsumer<SystemLogConsumer>();
+    
+    var rabbitHost = Environment.GetEnvironmentVariable("RabbitMQConfig__HostName") ?? "localhost";
 
     x.UsingRabbitMq((context, cfg) =>
     {
-        cfg.Host("localhost", 35672, "/", h => {
+        cfg.Host("localhost", 5672, "/", h => {
             h.Username("guest");
             h.Password("guest");
         });

@@ -26,27 +26,23 @@ builder.Services.AddMassTransit(x =>
 {
     x.AddConsumer<SystemLogConsumer>();
 
-    x.UsingRabbitMq((context, cfg) =>
+   x.UsingRabbitMq((context, cfg) =>
 {
-    var hostAddress = Environment.GetEnvironmentVariable("RabbitMQConfig__HostName");
+    var rabbitHost = Environment.GetEnvironmentVariable("RabbitMQConfig__HostName") ?? "localhost";
+    var rabbitUser = Environment.GetEnvironmentVariable("RabbitMQConfig__UserName") ?? "guest";
+    var rabbitPass = Environment.GetEnvironmentVariable("RabbitMQConfig__Password") ?? "guest";
 
-    if (string.IsNullOrEmpty(hostAddress))
+    cfg.Host(rabbitHost, 5672, "/", h =>
     {
-        hostAddress = "localhost";
-    }
-
-    cfg.Host(hostAddress, 5672, "/", h =>
-    {
-        h.Username("guest");
-        h.Password("guest");
+        h.Username(rabbitUser);
+        h.Password(rabbitPass);
     });
 
-            cfg.ReceiveEndpoint("system-log-queue", e =>
-        {
-            e.ConfigureConsumer<SystemLogConsumer>(context);
-        });
+    cfg.ReceiveEndpoint("system-log-queue", e =>
+    {
+        e.ConfigureConsumer<SystemLogConsumer>(context);
+    });
 });
-    });
     
 
 var app = builder.Build();

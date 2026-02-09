@@ -1,11 +1,10 @@
-﻿using FibaPlus_Bank.Models;
+using FibaPlus_Bank.Models;
 using FibaPlus_Bank.Services;
 using Microsoft.EntityFrameworkCore;
-using MassTransit; 
-using FibaPlus_Bank.Consumers; 
+using MassTransit;
+using FibaPlus_Bank.Consumers;
 
 var builder = WebApplication.CreateBuilder(args);
-
 
 builder.Services.AddControllersWithViews();
 
@@ -16,7 +15,6 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
-
 builder.Services.AddDbContext<FibraPlusBankDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -26,27 +24,26 @@ builder.Services.AddMassTransit(x =>
 {
     x.AddConsumer<SystemLogConsumer>();
 
-   x.UsingRabbitMq((context, cfg) =>
-{
-    var rabbitHost = Environment.GetEnvironmentVariable("RabbitMQConfig__HostName") ?? "localhost";
-    var rabbitUser = Environment.GetEnvironmentVariable("RabbitMQConfig__UserName") ?? "guest";
-    var rabbitPass = Environment.GetEnvironmentVariable("RabbitMQConfig__Password") ?? "guest";
-
-    cfg.Host(rabbitHost, 5672, "/", h =>
+    x.UsingRabbitMq((context, cfg) =>
     {
-        h.Username(rabbitUser);
-        h.Password(rabbitPass);
-    });
+        var rabbitHost = Environment.GetEnvironmentVariable("RabbitMQConfig__HostName") ?? "localhost";
+        var rabbitUser = Environment.GetEnvironmentVariable("RabbitMQConfig__UserName") ?? "guest";
+        var rabbitPass = Environment.GetEnvironmentVariable("RabbitMQConfig__Password") ?? "guest";
 
-    cfg.ReceiveEndpoint("system-log-queue", e =>
-    {
-        e.ConfigureConsumer<SystemLogConsumer>(context);
+        cfg.Host(rabbitHost, 5672, "/", h =>
+        {
+            h.Username(rabbitUser);
+            h.Password(rabbitPass);
+        });
+
+        cfg.ReceiveEndpoint("system-log-queue", e =>
+        {
+            e.ConfigureConsumer<SystemLogConsumer>(context);
+        });
     });
 });
-    
 
 var app = builder.Build();
-
 
 if (!app.Environment.IsDevelopment())
 {
@@ -54,9 +51,7 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-
 app.UseHttpsRedirection();
-
 app.UseStaticFiles();
 
 app.UseRouting();

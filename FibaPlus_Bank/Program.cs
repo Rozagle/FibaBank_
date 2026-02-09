@@ -31,9 +31,12 @@ builder.Services.AddMassTransit(x =>
         var rabbitPass = Environment.GetEnvironmentVariable("RabbitMQConfig__Password") ?? "guest";
         
         var rabbitPortStr = Environment.GetEnvironmentVariable("RabbitMQConfig__Port");
-        int rabbitPort = string.IsNullOrEmpty(rabbitPortStr) ? 5672 : int.Parse(rabbitPortStr);
+        int rabbitPort = 5672;
+        if (!string.IsNullOrEmpty(rabbitPortStr) && int.TryParse(rabbitPortStr, out int parsedPort))
+        {
+            rabbitPort = parsedPort;
+        }
 
-        // Bağlantıyı kur
         cfg.Host(rabbitHost, rabbitPort, "/", h =>
         {
             h.Username(rabbitUser);
@@ -45,7 +48,6 @@ builder.Services.AddMassTransit(x =>
             e.ConfigureConsumer<SystemLogConsumer>(context);
         });
     });
-});
 });
 
 var app = builder.Build();

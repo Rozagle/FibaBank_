@@ -25,22 +25,29 @@ builder.Services.AddHttpClient<MarketDataService>();
 builder.Services.AddMassTransit(x =>
 {
     x.AddConsumer<SystemLogConsumer>();
-    
-    var rabbitHost = Environment.GetEnvironmentVariable("RabbitMQConfig__HostName") ?? "localhost";
 
     x.UsingRabbitMq((context, cfg) =>
-    {
-        cfg.Host("localhost", 5672, "/", h => {
-            h.Username("guest");
-            h.Password("guest");
-        });
+{
+    var hostAddress = Environment.GetEnvironmentVariable("RabbitMQConfig__HostName");
 
-        cfg.ReceiveEndpoint("system-log-queue", e =>
+    if (string.IsNullOrEmpty(hostAddress))
+    {
+        hostAddress = "localhost";
+    }
+
+    cfg.Host(hostAddress, 5672, "/", h =>
+    {
+        h.Username("guest");
+        h.Password("guest");
+    });
+
+            cfg.ReceiveEndpoint("system-log-queue", e =>
         {
             e.ConfigureConsumer<SystemLogConsumer>(context);
         });
-    });
 });
+    });
+    
 
 var app = builder.Build();
 

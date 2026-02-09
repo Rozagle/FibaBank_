@@ -3,9 +3,15 @@
 ###############################################################################
 * text=auto
 *.html linguist-detectable=false
+*.cshtml linguist-detectable=false
 *.css linguist-detectable=false
 *.js linguist-detectable=false
+
+Views/** linguist-detectable=false
+Views/** linguist-vendored
 wwwroot/** linguist-vendored
+
+* linguist-language=CSharp
 ###############################################################################
 # Set default behavior for command prompt diff.
 #

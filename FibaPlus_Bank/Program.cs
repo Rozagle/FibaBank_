@@ -37,7 +37,7 @@ builder.Services.AddMassTransit(x =>
             rabbitPort = parsedPort;
         }
 
-        cfg.Host(rabbitHost, rabbitPort, "/", h =>
+        cfg.Host(new Uri($"rabbitmq://{rabbitHost}:{rabbitPort}/"), h =>
         {
             h.Username(rabbitUser);
             h.Password(rabbitPass);

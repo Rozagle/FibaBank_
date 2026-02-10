@@ -616,6 +616,7 @@ namespace FibaPlus_Bank.Controllers
         }
 
 
+
         [HttpPost]
         public IActionResult UpdateInterestTier(int id, string rate) 
         {

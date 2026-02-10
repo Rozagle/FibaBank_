@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: fibra-db
+    restart: always
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=19920506123!$%
+      - MSSQL_PID=Express
+    ports:
+      - "1433:1433"
+    volumes:
+      - sql_data:/var/opt/mssql 
+    networks:
+      - fibra-network
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: fibra-rabbit
+    restart: always
+    ports:
+      - "35672:5672"   
+      - "15672:15672"  
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=123456
+    volumes:
+      - rabbit_data:/var/lib/rabbitmq
+    networks:
+      - fibra-network
+
+  app:
+    image: fibrabank-app:v1 
+    container_name: fibrabank-web
+    restart: on-failure
+    depends_on:
+      - sqlserver
+      - rabbitmq
+    ports:
+      - "7000:8080"
+    environment:
+      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=FibaPlusBankDb;User Id=sa;Password=19920506123!$%;TrustServerCertificate=True;
+      - RabbitMQConfig__HostName=rabbitmq
+      - RabbitMQConfig__Port=5672 
+      - RabbitMQConfig__UserName=admin
+      - RabbitMQConfig__Password=123456
+    networks:
+      - fibra-network
+
+volumes:
+  sql_data:
+  rabbit_data:
+
+networks:
+  fibra-network:
+    driver: bridge

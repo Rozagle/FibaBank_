@@ -8,7 +8,7 @@ services:
     restart: always
     environment:
       - ACCEPT_EULA=Y
-      - MSSQL_SA_PASSWORD=FibaBank_2026!
+      - MSSQL_SA_PASSWORD=Fiba2026.Bank
       - MSSQL_PID=Express
     ports:
       - "1433:1433"
@@ -42,7 +42,7 @@ services:
     ports:
       - "7000:8080"
     environment:
-      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=FibaPlusBankDb;User Id=sa;Password=FibaBank_2026!;TrustServerCertificate=True;
+      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=FibaPlusBankDb;User Id=sa;Password=Fiba2026.Bank;TrustServerCertificate=True;
       - RabbitMQConfig__HostName=rabbitmq
       - RabbitMQConfig__Port=5672
       - RabbitMQConfig__UserName=admin

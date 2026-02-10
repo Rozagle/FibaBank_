@@ -208,3 +208,13 @@
 </div>
 
 <script src="~/js/transfer.js" asp-append-version="true"></script>
+<script>
+    @if (TempData["Error"] != null)
+    {
+            <text>Swal.fire('Hata!', '@TempData["Error"]', 'error');</text>
+    }
+    @if (TempData["Success"] != null)
+    {
+            <text>Swal.fire('Başarılı!', '@TempData["Success"]', 'success');</text>
+    }
+</script>

@@ -30,15 +30,33 @@ namespace FibaPlus_Bank.Controllers
                 .Select(c => c.AccountId)
                 .ToList();
 
-            ViewBag.Accounts = _context.Accounts
+            var allAccounts = _context.Accounts
                 .Where(x => x.UserId == userId && !_restrictedCodes.Contains(x.CurrencyCode))
                 .Where(x => x.AccountType != "Kredi" || activeCardAccountIds.Contains(x.AccountId))
                 .ToList();
 
-            ViewBag.Cards = _context.Cards
+            var activeCards = _context.Cards
                 .Where(c => c.Account.UserId == userId && c.Status == "Active")
                 .ToList();
 
+            var filteredAccounts = allAccounts.Where(acc =>
+            {
+                if (acc.AccountType == "Kredi")
+                {
+                    var card = activeCards.FirstOrDefault(c => c.AccountId == acc.AccountId);
+                    if (card == null) return false;
+
+                    decimal availableLimit = (card.CardLimit ?? 0) - (card.Debt ?? 0);
+                    return availableLimit > 0;
+                }
+                else
+                {
+                    return acc.Balance > 0;
+                }
+            }).ToList();
+
+            ViewBag.Cards = activeCards;
+            ViewBag.Accounts = filteredAccounts;
             ViewBag.PaymentTypes = _context.PaymentTypes.ToList();
             ViewBag.SelectedAccountId = selectAccountId;
 
@@ -284,15 +302,37 @@ namespace FibaPlus_Bank.Controllers
         }
 
         [HttpPost]
-        public IActionResult BreakTerm(int accountId)
+        public IActionResult BreakTerm(int accountId, string receiverIban) 
         {
             var userId = HttpContext.Session.GetInt32("UserId");
             if (userId == null) return Json(new { success = false, message = "Oturum kapalı." });
 
             var account = _context.Accounts.FirstOrDefault(x => x.AccountId == accountId && x.UserId == userId);
-            if (account == null) return Json(new { success = false, message = "Hesap bulunamadı." });
+            if (account == null) return Json(new { success = false, message = "Gönderen hesap bulunamadı." });
 
             if (account.AccountType == "Vadesiz") return Json(new { success = true, message = "Hesap zaten vadesiz." });
+
+            string cleanReceiverIban = receiverIban?.Replace(" ", "").Trim();
+            var receiverAccount = _context.Accounts.FirstOrDefault(x => x.Iban == cleanReceiverIban);
+
+            if (receiverAccount != null)
+            {
+                if (account.CurrencyCode != receiverAccount.CurrencyCode)
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = $"HATA: Farklı para birimleri arasında transfer yapılamaz! ({account.CurrencyCode} -> {receiverAccount.CurrencyCode})"
+                    });
+                }
+            }
+            else
+            {
+                if (account.CurrencyCode != "TRY")
+                {
+                    return Json(new { success = false, message = "Dış bankalara sadece TRY transferi yapılabilir." });
+                }
+            }
 
             if (account.AccountType == "Vadeli")
             {

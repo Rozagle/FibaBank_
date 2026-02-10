@@ -1,4 +1,6 @@
-﻿    $('#senderAccount').change(function() {
+﻿$(document).ready(function () {
+
+    $('#senderAccount').change(function () {
         var selected = $(this).find(':selected');
         if (selected.val() === "") return;
         var currency = selected.data('currency');
@@ -9,41 +11,50 @@
         $('#feeWarning').text(fee);
     });
 
-    $('#ibanInput').on('input', function() {
-        var val = $(this).val().replace(/\s/g, '');
+    $('#ibanInput').on('input', function () {
+        var val = $(this).val().replace(/\s/g, ''); 
         var senderId = $('#senderAccount').val();
-        if (val.length === 26) {
+
+        if (val.length >= 20) { 
             $('#ibanError').hide();
-            $.get('/Transfer/CheckIban', { iban: val, senderAccountId: senderId }, function(data) {
+
+            $.get('/Transfer/CheckIban', { iban: val, senderAccountId: senderId }, function (data) {
                 if (data.isSameAccount) {
-                    Swal.fire('Hata', data.message, 'warning'); $('#ibanInput').val(''); return;
+                    Swal.fire('Hata', data.message, 'warning');
+                    $('#ibanInput').val('');
+                    return;
                 }
                 if (data.success) {
                     $('#receiverName').val(data.name);
                     $('#bankLogo').html(`<i class="${data.logo} fs-5 text-primary"></i>`).show();
-                    if(data.isLocked) $('#receiverName').prop('readonly', true).addClass('bg-light text-muted');
+
+                    if (data.isLocked) {
+                        $('#receiverName').prop('readonly', true).addClass('bg-light text-muted');
+                    }
                 } else {
-                    $('#bankLogo').hide(); $('#receiverName').val('').prop('readonly', false).removeClass('bg-light text-muted');
+                    $('#bankLogo').hide();
+                    $('#receiverName').val('').prop('readonly', false).removeClass('bg-light text-muted');
                 }
             });
         } else {
-            if(val.length > 0) $('#ibanError').show();
             $('#bankLogo').hide();
-            if ($('#receiverName').prop('readonly')) $('#receiverName').val('').prop('readonly', false).removeClass('bg-light text-muted');
+            if ($('#receiverName').prop('readonly')) {
+                $('#receiverName').val('').prop('readonly', false).removeClass('bg-light text-muted');
+            }
         }
     });
 
-    function confirmTransfer() {
+    window.confirmTransfer = function () {
         var senderSelect = document.getElementById('senderAccount');
         var selectedOption = senderSelect.options[senderSelect.selectedIndex];
-        if(senderSelect.value === "") { Swal.fire('Uyarı', 'Hesap seçiniz.', 'warning'); return; }
+        if (senderSelect.value === "") { Swal.fire('Uyarı', 'Hesap seçiniz.', 'warning'); return; }
 
         var accountType = selectedOption.getAttribute('data-type');
         var accountId = senderSelect.value;
         var rawAmount = $('input[name="Amount"]').val();
         var amount = parseFloat(rawAmount.replace(',', '.') || 0);
 
-        if(!amount || amount <= 0) { Swal.fire('Uyarı', 'Geçersiz tutar.', 'warning'); return; }
+        if (!amount || amount <= 0) { Swal.fire('Uyarı', 'Geçersiz tutar.', 'warning'); return; }
 
         if (accountType === "Vadeli") {
             Swal.fire({
@@ -59,23 +70,24 @@
                        </div>`,
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#dc3545', 
+                confirmButtonColor: '#dc3545',
                 cancelButtonColor: '#6c757d',
                 confirmButtonText: 'Evet, Vadeyi Boz ve Gönder',
                 cancelButtonText: 'İptal Et'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    $.post('/Transfer/BreakTerm', { accountId: accountId }, function(res) {
-                        if(res.success) {
+                    var receiverIbanVal = $('#ibanInput').val();
+                    $.post('/Transfer/BreakTerm', { accountId: accountId, receiverIban: receiverIbanVal }, function (res) {
+                        if (res.success) {
                             $('#transferForm').submit();
                         } else {
-                            Swal.fire('Hata', res.message, 'error');
-                        }
+                            Swal.fire('İşlem İptal Edildi', res.message, 'error');                        }
                     });
                 }
             });
-            return; 
+            return;
         }
+
         Swal.fire({
             title: 'Onaylıyor musunuz?',
             text: amount + " TL gönderilecek.",
@@ -86,17 +98,10 @@
         }).then((result) => {
             if (result.isConfirmed) $('#transferForm').submit();
         });
-    }
+    };
 
-    function downloadReceipt(ref, date, sender, receiver, amount) {
+    window.downloadReceipt = function (ref, date, sender, receiver, amount) {
         Swal.fire({ title: 'Dekont', text: 'Hazırlanıyor...', icon: 'info', timer: 1000, showConfirmButton: false });
-    }
+    };
 
-    @if (TempData["Error"] != null)
-    {
-        <text>Swal.fire('Hata!', '@TempData["Error"]', 'error');</text>
-    }
-    @if (TempData["Success"] != null)
-    {
-        <text>Swal.fire('Başarılı!', '@TempData["Success"]', 'success');</text>
-    }
+});
